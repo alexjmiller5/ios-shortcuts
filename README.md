@@ -1,5 +1,10 @@
 # Shortcuts
 
+## About This Repo
+
+- The folder structure of the shortcuts will mirror the structure of the shortcuts app on iOS
+- The shortcuts will be written in [Cherri](https://cherrilang.org/)
+
 ## Capabilities
 
 - Toolbox pro global variables could be used to store my Spotify and notion api keys and other duplicate global variables. This might be better than storing them in a file or hardcoding them in shortcuts
