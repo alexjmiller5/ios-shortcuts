@@ -1,0 +1,89 @@
+#define name Shazam → Spotify
+#define color blue
+
+const Text = "Hardcoded"
+
+repeat _ for 1 {
+	if Song {
+	} else {
+				rawAction("com.apple.musicrecognition.RecognizeMusicIntent")
+		@Song = ['Title']
+		@Artist = ['Artist']
+	}
+}
+if !Song {
+	show("Unable to recognize the song")
+	stop()
+}
+if Text != "Hardcoded" {
+	const File = getFile("credentials.json", false)
+	confirm("Unable to access Spotify credentials")
+	if !File {
+		stop()
+	} else {
+		@ClientID = File['client_id']
+		@ClientSecret = File['client_secret']
+		@RefreshToken = File['refresh_token']
+		@PlaylistID = File['playlist_id']
+	}
+} else {
+	const Dictionary = {
+		"ClientID": "***REMOVED***",
+		"ClientSecret": "***REMOVED***",
+		"PlaylistID": "***REMOVED***",
+		"RefreshToken": "***REMOVED***"
+	}
+	@ClientID = Dictionary['ClientID']
+	@ClientSecret = Dictionary['ClientSecret']
+	@RefreshToken = Dictionary['RefreshToken']
+	@PlaylistID = Dictionary['PlaylistID']
+}
+replaceText(" ", "%20", Artist)
+@Artist
+replaceText(" ", "%20", Song)
+@Song
+const ContentsOfURL = formRequest("https://accounts.spotify.com/api/token", "POST", {
+	"client_id": "{ClientID}",
+	"client_secret": "{ClientSecret}",
+	"grant_type": "refresh_token",
+	"refresh_token": "{RefreshToken}"
+}, {})
+@AccessToken = ContentsOfURL['access_token']
+const ContentsOfURL1 = downloadURL(https://api.spotify.com/v1/search?q=track:{Song}+artist:{Artist}&type=track, {
+	"Authorization": "Bearer {AccessToken}",
+	"Content-Type": "application/json"
+})
+const DictionaryValue = getValue(ContentsOfURL1, "tracks.items")
+const ItemFromList = getFirstItem(DictionaryValue)
+const DictionaryValue1 = getValue(ItemFromList, "id")
+@TrackID = DictionaryValue1
+replaceText("%20", " ", Song)
+@Song
+replaceText("%20", " ", Artist)
+@Artist
+if !TrackID {
+	show(Could not find {Song} by {Artist} on Spotify)
+	appendNote(, {Song} by {Artist})
+	stop()
+}
+const ContentsOfURL2 = downloadURL(https://api.spotify.com/v1/playlists/{PlaylistID}/tracks, {
+	"Authorization": "Bearer {AccessToken}",
+	"Content-Type": "application/json"
+})
+if ContentsOfURL2 contains DictionaryValue1 {
+	show({Song} by {Artist} is already in your Spotify playlist)
+	stop()
+}
+const ContentsOfURL3 = jsonRequest(https://api.spotify.com/v1/playlists/{PlaylistID}/tracks, "POST", {
+	"uris": [
+		"spotify:track:{TrackID}"
+	]
+}, {
+	"Authorization": "Bearer {AccessToken}",
+	"Content-Type": "application/json"
+})
+const DictionaryValue2 = getValue(ContentsOfURL3, "error")
+if DictionaryValue2 {
+	show({Song} by {Artist} could not be added to Spotify playlist)
+}
+show({Song} by {Artist} has been added to Spotify playlist)
