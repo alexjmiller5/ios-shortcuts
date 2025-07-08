@@ -1,1 +1,8 @@
+# macOS
 .DS_Store
+
+# Signed shortcuts
+.shortcut
+
+# Secrets
+.env.local

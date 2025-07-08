@@ -63,10 +63,10 @@ if USE_HARDCODED_CREDS != "Hardcoded" {
     // NOTE: Storing refresh tokens and secrets directly in code is not recommended
     // for shared shortcuts, but is acceptable for personal use.
     const Credentials = {
-        "ClientID": "***REMOVED***",
-        "ClientSecret": "***REMOVED***",
-        "PlaylistID": "***REMOVED***",
-        "RefreshToken": "***REMOVED***"
+        "ClientID": "SPOTIFY_CLIENT_ID",
+        "ClientSecret": "SPOTIFY_CLIENT_SECRET",
+        "PlaylistID": "SPOTIFY_SHAZAM_PLAYLIST_ID",
+        "RefreshToken": "SPOTIFY_REFRESH_TOKEN"
     }
     @ClientID = Credentials['ClientID']
     @ClientSecret = Credentials['ClientSecret']
