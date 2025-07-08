@@ -11,11 +11,15 @@
 - Scriptable has the ability to run shortcuts, and can run JS code directly from shortcuts which could be better than doing logic directly in shortcuts
 
 ## Compiling shortcuts
+
 - The shortcuts can be compiled to a `.shortcut` file which can be imported into the Shortcuts app on iOS
 - Use the `cherri` command line tool to compile the shortcuts:
+
   ```bash
   cherri <cherri_file_name>
   ```
+
+- If the shortcuts have secrets make sure to put the variables in a `.env.local` file and run `./cherri-compiler-with-secrets.sh <cherri_file_name>` to compile the shortcuts with the secrets included. The `.env.local` file should contain the secrets in the format `VARIABLE_NAME=secret_value`.
 
 ## Enhancements
 
