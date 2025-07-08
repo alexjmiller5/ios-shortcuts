@@ -10,6 +10,13 @@
 - Toolbox pro global variables could be used to store my Spotify and notion api keys and other duplicate global variables. This might be better than storing them in a file or hardcoding them in shortcuts
 - Scriptable has the ability to run shortcuts, and can run JS code directly from shortcuts which could be better than doing logic directly in shortcuts
 
+## Compiling shortcuts
+- The shortcuts can be compiled to a `.shortcut` file which can be imported into the Shortcuts app on iOS
+- Use the `cherri` command line tool to compile the shortcuts:
+  ```bash
+  cherri <cherri_file_name>
+  ```
+
 ## Enhancements
 
 - **Automatically generating shortcuts for notion databases based on their structure:**

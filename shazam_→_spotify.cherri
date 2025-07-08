@@ -28,10 +28,10 @@ if Text != "Hardcoded" {
 	}
 } else {
 	const Dictionary = {
-		"ClientID": "***REMOVED***",
-		"ClientSecret": "***REMOVED***",
-		"PlaylistID": "***REMOVED***",
-		"RefreshToken": "***REMOVED***"
+		"ClientID": "SPOTIFY_CLIENT_ID",
+		"ClientSecret": "SPOTIFY_CLIENT_SECRET",
+		"PlaylistID": "SPOTIFY_SHAZAM_PLAYLIST_ID",
+		"RefreshToken": "SPOTIFY_REFRESH_TOKEN"
 	}
 	@ClientID = Dictionary['ClientID']
 	@ClientSecret = Dictionary['ClientSecret']
