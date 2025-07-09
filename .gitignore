@@ -2,7 +2,7 @@
 .DS_Store
 
 # Signed shortcuts
-.shortcut
+*.shortcut
 
 # Secrets
 .env.local

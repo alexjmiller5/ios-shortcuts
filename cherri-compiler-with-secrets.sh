@@ -22,7 +22,7 @@ if [ "$#" -eq 0 ]; then
     exit 1
 fi
 
-if ! command -v $COMMAND_TO_RUN &>/dev/null; then
+if ! command -v "$COMMAND_TO_RUN" &>/dev/null; then
     echo "Error: Command '$COMMAND_TO_RUN' not found. Please ensure it's installed and in your PATH." >&2
     exit 1
 fi
@@ -59,10 +59,9 @@ for file in "$@"; do
     fi
 
     # Create a secure temporary file with a .cherri extension.
-    # This is often required by compilers that check the file extension.
     temp_file=$(mktemp "${TMPDIR:-/tmp}/cherri-temp.XXXXXX.cherri")
     trap 'rm -f "$temp_file"' EXIT INT TERM
-
+    
     echo "Processing '$file'..."
 
     # Perform all substitutions and write to the temp file.
@@ -71,9 +70,7 @@ for file in "$@"; do
     echo "Running command: $COMMAND_TO_RUN \"$temp_file\""
 
     # Execute the command with the temporary file.
-    $COMMAND_TO_RUN "$temp_file"
-
-    echo "Successfully processed '$file'."
+    "$COMMAND_TO_RUN" "$temp_file" --output="${file%.cherri}.shortcut"
 
     # --- PAUSE FOR DEBUGGING ---
     # The script will now pause so you can inspect the temporary file.
@@ -88,6 +85,7 @@ for file in "$@"; do
     echo "Resuming script and deleting temp file..."
     rm -f "$temp_file"
     trap - EXIT INT TERM
+    
 done
 
 echo "All files processed successfully."
