@@ -71,17 +71,17 @@ for file in "$@"; do
     echo "Running command: $COMMAND_TO_RUN \"$temp_file\""
 
     # Execute the command with the temporary file.
-    # $COMMAND_TO_RUN "$temp_file"
+    $COMMAND_TO_RUN "$temp_file"
 
     echo "Successfully processed '$file'."
 
     # --- PAUSE FOR DEBUGGING ---
     # The script will now pause so you can inspect the temporary file.
-    echo "---"
-    echo "DEBUG: Paused before cleanup."
-    echo "You can inspect the temp file at: $temp_file"
-    echo "Press [Enter] to continue and delete the file."
-    read -r
+    # echo "---"
+    # echo "DEBUG: Paused before cleanup."
+    # echo "You can inspect the temp file at: $temp_file"
+    # echo "Press [Enter] to continue and delete the file."
+    # read -r
     # --- END DEBUGGING ---
 
     # Clean up the temp file for this iteration.
