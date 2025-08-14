@@ -6,7 +6,7 @@ A JavaScript one-liner to find out if your device has connectivity — @atnbueno
 
 - This is less intrusive than other methods, like getting the IP address
 
-v2.0.0 (2023-10-03) Now it works in Watch!
+v2.0.0 (2023-10-03) Now it works in Apple Watch!
 v2.1.0 (2024-03-29) Faster detection for the “offline” case
 */
 
