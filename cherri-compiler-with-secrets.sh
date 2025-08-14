@@ -17,7 +17,7 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 if [ "$#" -eq 0 ]; then
-    echo "Usage: $0 <file1> [<file2> ...]" >&2
+    echo "Usage: $0 <file1.cherri> [<file2.cherri> ...]" >&2
     echo "Injects secrets from $ENV_FILE into files, runs '$COMMAND_TO_RUN', and cleans up." >&2
     exit 1
 fi
@@ -48,6 +48,7 @@ while IFS='=' read -r key value || [[ -n "$key" ]]; do
     sed_expressions+=(-e "s/[[:<:]]${key}[[:>:]]/${escaped_value}/g")
 
 done <"$ENV_FILE"
+
 if [ "${#sed_expressions[@]}" -eq 0 ]; then
     echo "Warning: No secrets found or parsed from '$ENV_FILE'."
 fi
@@ -58,34 +59,46 @@ for file in "$@"; do
         continue
     fi
 
-    # Create a secure temporary file with a .cherri extension.
+    # Determine the output filename based on the first line of the file.
+    output_path=""
+    first_line=$(head -n 1 "$file")
+
+    if [[ "$first_line" =~ ^#define\ name\ (.*)$ ]]; then
+        # If #define is found, use it for the filename with a .shortcut extension.
+        shortcut_name="${BASH_REMATCH[1]}"
+        shortcut_name=${shortcut_name%$'\r'} # Remove potential carriage return
+        output_path="$(dirname "$file")/${shortcut_name}.shortcut"
+    else
+        # Otherwise, use the original cherri file's.
+        output_path="$(dirname "$file")/$(basename "$file" .cherri).cherri"
+    fi
+
+    # Create a secure temporary file.
     temp_file=$(mktemp "${TMPDIR:-/tmp}/cherri-temp.XXXXXX.cherri")
     trap 'rm -f "$temp_file"' EXIT INT TERM
-    
+
     echo "Processing '$file'..."
 
     # Perform all substitutions and write to the temp file.
     sed "${sed_expressions[@]}" "$file" >"$temp_file"
 
-    echo "Running command: $COMMAND_TO_RUN \"$temp_file\""
-
-    # Execute the command with the temporary file.
-    "$COMMAND_TO_RUN" "$temp_file" --output="${file%.cherri}.shortcut"
+    echo "Running command: $COMMAND_TO_RUN \"$temp_file\" -> \"$output_path\""
 
     # --- PAUSE FOR DEBUGGING ---
     # The script will now pause so you can inspect the temporary file.
-    # echo "---"
-    # echo "DEBUG: Paused before cleanup."
-    # echo "You can inspect the temp file at: $temp_file"
-    # echo "Press [Enter] to continue and delete the file."
-    # read -r
+    echo "---"
+    echo "DEBUG: Paused before cleanup."
+    echo "You can inspect the temp file at: $temp_file"
+    echo "Press [Enter] to continue and delete the file."
+    read -r
     # --- END DEBUGGING ---
 
+    # Execute the command with the temporary file and the determined output path.
+    "$COMMAND_TO_RUN" "$temp_file" --output="$output_path"
+
     # Clean up the temp file for this iteration.
-    echo "Resuming script and deleting temp file..."
     rm -f "$temp_file"
     trap - EXIT INT TERM
-    
 done
 
 echo "All files processed successfully."
