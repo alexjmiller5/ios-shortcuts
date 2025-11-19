@@ -31,6 +31,7 @@
   - Reverse engineer the shortcuts database in Library/Shortcuts to have code go in and automatically update my shortcuts based on the changes I make to my cherri code
   - Write my shortcuts for a custom app as app intents and put them in shortcuts — the shortcuts won’t change but the internal commands from the app intents can change or have conditionals based on information from the app
   - Develop another shortcut which updates the custom shortcuts by clicking it
+  - The task I wrote could actually be the details / notes I think that’d be better - AI could summarize it into the title
 
 ## TODOs
 
@@ -62,3 +63,4 @@
 - [ ] create a system for my ai notion database post requests where if it can’t figure them out it somehow marks them to be fixed in my workspace / tasks with a hyperlink to the item that needs to be manually fixed
 - [ ] Make for my shortcuts not just type out what i want the text to do but also you can just speak into the phone and itll send the audio to ai to put it in the database
 - [ ] Make one shortcut with plain text and select just the database it goes to instead of having a shortcut for each database and it'll use ai to format the proper request and possibly fill in the properties based on the database structure
+- [ ] adjust my .env.local file to use the 1password cli to get the secrets instead of storing them in a file -- that way the secrets are more secure and not stored in plaintext on my filesystem
