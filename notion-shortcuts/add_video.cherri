@@ -1,6 +1,7 @@
 #define name Add Video
 #define color darkgray
 #define glyph iPhone
+#include 'actions/web'
 
 @Title = prompt("Enter the title for the video")
 
