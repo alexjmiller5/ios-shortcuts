@@ -21,14 +21,14 @@ cherri <file.cherri>
 
 **Compilation with secrets and constants:**
 ```bash
-./scripts/compile-with-op.sh <file1.cherri> [file2.cherri] ...
+./scripts/compile-shortcut.sh <file1.cherri> [file2.cherri] ...
 ```
 
 **Using just (recommended):**
 ```bash
-just build <file.cherri>           # Compile specific file(s)
-just build-dir <directory>         # Compile all .cherri files in a directory
-just build-all                     # Compile all shortcuts in the repo
+just compile <file.cherri>           # Compile specific file(s)
+just compile-dir <directory>         # Compile all .cherri files in a directory
+just compile-all                     # Compile all shortcuts in the repo
 ```
 
 ### Secrets
