@@ -15,7 +15,7 @@ cherri <file.cherri>
 
 **Compilation with secrets and constants:**
 ```bash
-./scripts/compile-with-op.sh <file1.cherri> [file2.cherri] ...
+./scripts/compile-shortcut.sh <file1.cherri> [file2.cherri] ...
 ```
 
 The compile script processes files in this order:
@@ -65,7 +65,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 - `connectivity/` - Network-related shortcuts
 - `notes-shortcuts/` - Apple Notes shortcuts
 - `files-for-cherri-gem/` - Documentation files for a custom Cherri Gemini gem
-- `scripts/` - Build scripts (`compile-with-op.sh`)
+- `scripts/` - Build scripts (`compile-shortcut.sh`)
 - `constants.txt` - Non-sensitive constants for compilation
 
 ## Cherri Best Practices
