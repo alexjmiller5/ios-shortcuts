@@ -1,0 +1,1 @@
+SYNAPSE_INTAKER_BASE_URL=https://intaker-gateway-6empo0rj.ue.gateway.dev/process

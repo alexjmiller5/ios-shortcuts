@@ -1,5 +1,9 @@
 # iOS Shortcuts
 
+# Adding secrets to cherri
+
+To write secrets into the cherri compiled shortcuts
+
 ## About This Repo
 
 - The folder structure of the shortcuts will mirror the structure of the shortcuts app on iOS
@@ -64,3 +68,4 @@
 - [ ] Make for my shortcuts not just type out what i want the text to do but also you can just speak into the phone and itll send the audio to ai to put it in the database
 - [ ] Make one shortcut with plain text and select just the database it goes to instead of having a shortcut for each database and it'll use ai to format the proper request and possibly fill in the properties based on the database structure
 - [ ] adjust my .env.local file to use the 1password cli to get the secrets instead of storing them in a file -- that way the secrets are more secure and not stored in plaintext on my filesystem
+- [ ] Create a constants engine with the compile script which pulls in constants from a constants file and puts them into the cherri files before compiling -- that way i can have global constants for things like urls and non secrets without having to store them in each cherri file. Then I can also write constant:CONSTANT_NAME and secret:SECRET_NAME to differentiate between constants and secrets

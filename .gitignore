@@ -6,3 +6,6 @@
 
 # Secrets
 .env.local
+
+# Claude AI files
+.claude
