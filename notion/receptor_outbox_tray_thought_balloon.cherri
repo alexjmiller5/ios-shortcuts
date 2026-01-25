@@ -1,0 +1,22 @@
+#define name Receptor 📤 💭
+#define color violet
+#define glyph brainHead
+#define from sharesheet
+#define inputs url
+#include 'actions/web'
+#include 'actions/scripting'
+
+@Thought
+
+if ShortcutInput {
+    const Context = prompt("Enter your context")
+    @Thought = "{ShortcutInput} $ {Context}"
+} else {
+    nothing()
+}
+
+const API_Response = jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:SYNAPSE_INTAKER_API_KEY>>", "POST", {
+    "raw_text": "{Thought}"
+}, {
+    "Content-Type": "application/json"
+})

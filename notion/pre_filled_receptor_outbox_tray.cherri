@@ -1,0 +1,25 @@
+#define name Pre-filled Receptor 📤
+#define color violet
+#define glyph brainHead
+#define from sharesheet
+#define inputs url
+#include 'actions/web'
+#include 'actions/scripting'
+
+if ShortcutInput {
+    const NameResult = getName(ShortcutInput)
+    @InputName = "{NameResult}"
+    if InputName contains "https://maps.app.goo.gl" {
+        @Thought = "{ShortcutInput} $ <insert-pre-filled-message>"
+    } else {
+        @Thought = ShortcutInput
+    }
+} else {
+    nothing()
+}
+
+const API_Response = jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:SYNAPSE_INTAKER_API_KEY>>", "POST", {
+    "raw_text": "{Thought}"
+}, {
+    "Content-Type": "application/json"
+})
