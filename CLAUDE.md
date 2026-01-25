@@ -13,36 +13,60 @@ This repository contains iOS Shortcuts written in [Cherri](https://cherrilang.or
 cherri <file.cherri>
 ```
 
-**Compilation with secrets (using 1Password CLI):**
+**Compilation with secrets and constants:**
 ```bash
-./scripts/compile-with-op.sh <file1.cherri> <file2.cherri> ...
+./scripts/compile-with-op.sh <file1.cherri> [file2.cherri] ...
 ```
 
-The `compile-with-op.sh` script uses `op inject` to substitute secret placeholders (like `NOTION_INTEGRATION_SECRET`, `NOTION_VIDEO_DATABASE_ID`) with values from 1Password before compilation.
+The compile script processes files in this order:
+1. Substitutes `<<constant:NAME>>` with values from `constants.txt`
+2. Converts `<<secret:NAME>>` to `op://Personal/NAME/credential`
+3. Runs `op inject` to substitute actual secret values from 1Password
+4. Compiles with `cherri`
+
+## Secrets and Constants
+
+### Secrets (`<<secret:NAME>>`)
+Stored in 1Password under the "Personal" vault with the "Developer Credentials" tag. Referenced as:
+```cherri
+@ClientID = "<<secret:SPOTIFY_CLIENT_ID>>"
+"Authorization": "Bearer <<secret:NOTION_INTEGRATION_SECRET>>"
+```
+
+### Constants (`<<constant:NAME>>`)
+Stored in `constants.txt` at repo root in `KEY=value` format:
+```
+SYNAPSE_INTAKER_BASE_URL=https://example.com/api
+```
+
+Referenced as:
+```cherri
+jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POST", { ... })
+```
 
 ## Code Patterns
 
 ### Cherri Syntax Conventions
 
-Shortcuts use these common patterns:
-
-- **Metadata directives** at the top: `#define name`, `#define color`, `#define glyph`
-- **Includes** for action categories: `#include 'actions/web'`
+- **Metadata directives** at the top: `#define name`, `#define color`, `#define glyph`, `#define from sharesheet`
+- **Includes** for action categories: `#include 'actions/web'`, `#include 'actions/scripting'`
 - **Variables**: `@variableName = value` (mutable), `const name = value` (immutable)
 - **String interpolation**: `"{variableName}"` within strings
-- **Notion API calls**: Use `jsonRequest()` with proper headers including `Notion-Version: 2022-06-28`
+- **Notion API calls**: Use `jsonRequest()` with headers including `Notion-Version: 2022-06-28`
 
-### Secret Handling
-
-Secrets are referenced as plain identifiers (e.g., `NOTION_INTEGRATION_SECRET`) in `.cherri` files. The `op inject` tool replaces these with actual values during compilation. Never commit compiled `.shortcut` files or `.env.local`.
+### Type Handling
+- Use `const Result = getName(variable)` then `@textVar = "{Result}"` to convert action outputs to text for conditionals
+- `output()` expects text - place it inside if blocks when the else branch uses `nothing()`
 
 ## Directory Structure
 
-- `notion/` - Shortcuts that interact with Notion databases
-- `miscellaneous/` - Standalone utility shortcuts
+- `notion/` - Shortcuts that interact with Notion databases and Synapse intaker
+- `miscellaneous/` - Standalone utility shortcuts (Shazam→Spotify, etc.)
 - `connectivity/` - Network-related shortcuts
 - `notes-shortcuts/` - Apple Notes shortcuts
 - `files-for-cherri-gem/` - Documentation files for a custom Cherri Gemini gem
+- `scripts/` - Build scripts (`compile-with-op.sh`)
+- `constants.txt` - Non-sensitive constants for compilation
 
 ## Cherri Best Practices
 
@@ -53,4 +77,4 @@ Secrets are referenced as plain identifiers (e.g., `NOTION_INTEGRATION_SECRET`) 
 
 ## Additional Resources
 
-- Please reference the Cherri lang documentation when writing cherri code which is located at `/Users/alexmiller/Desktop/software/reference-repos/cherrilang.org/language`. This has all the specific docs on the language features and standard library functions and is especially important because this is a small, new language with a small community.
+- Reference the Cherri lang documentation at `/Users/alexmiller/Desktop/software/reference-repos/cherrilang.org/language` for language features and standard library functions
