@@ -24,6 +24,13 @@ cherri <file.cherri>
 ./scripts/compile-with-op.sh <file1.cherri> [file2.cherri] ...
 ```
 
+**Using just (recommended):**
+```bash
+just build <file.cherri>           # Compile specific file(s)
+just build-dir <directory>         # Compile all .cherri files in a directory
+just build-all                     # Compile all shortcuts in the repo
+```
+
 ### Secrets
 
 Secrets are stored in 1Password and referenced in `.cherri` files using the `<<secret:NAME>>` syntax:
@@ -84,7 +91,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 - [ ] Movies database -- the info should be populated by apis / ai instead of manually including genres, actors, etc.
 - [ ] TV shows database -- the info should be populated by apis / ai instead of Find some kind of api to get genres and actresses and actors and more details about my film and tv databases that will interact with my notion api
 - [ ] Fix my quick note shortcut so that it can handle weird characters like "\" -- rn it "Can't convert from text to dictionary" when I try to use it with a note that has a "\" in it
-- [ ] Fix Spotify shortcut when song can't be recognized— it's a bit garbage rn and could be way better with weird syntaces and there;s probably a better way to find a song on spotify than the way im currently doing it — some other kinda search api from spotify (Find a better way to look up songs with  the Spotify api using the Shazam data to improve my Shazam shortcut (Spanish song with accent didn't work — maybe it's the accent's fault)) -- the core of this problem isntead of searaching up a song on spotify necessarily could be converting the shazam link to a spotify link -- i could look into what other data the shazam action returns and see if it has a spotify link or something like that
+- [x] ~~Fix Spotify shortcut when song can't be recognized— it's a bit garbage rn and could be way better with weird syntaces and there;s probably a better way to find a song on spotify than the way im currently doing it — some other kinda search api from spotify (Find a better way to look up songs with  the Spotify api using the Shazam data to improve my Shazam shortcut (Spanish song with accent didn't work — maybe it's the accent's fault)) -- the core of this problem isntead of searaching up a song on spotify necessarily could be converting the shazam link to a spotify link -- i could look into what other data the shazam action returns and see if it has a spotify link or something like that~~
 - [ ] add an offline check to all my shortcuts so that if my phone is offline instead of sending the data directly to notion, it saves it somewhere else for it to be uploaded later. the trickiest part of this is makeing sure the data is uploaded in a timely fashion rather than just sitting there. Brainstroming now, I'm thinking the best psosible option would be to have a file with all the offline data for each shortcut. I'll have automations that run every 30 minutes or so to check if the phone is online, and if it is, it will upload the data from the file to notion. If the phone is offline, it will just keep the data in the file until it can be uploaded. I could also run a background task on my mac to check for the file and upload it to notion if the phone is offline or off since the files will be in the shared iCloud drive filesystem. That could be a bad idea though potentially. It seems like each shortcut will need a companion shortcut which checks each time if there was offline data, and if there was, it includes that in the new data being sent if the phone is now online. Also, that companion shortcut will be the one that's run by the automation, not the original shortcut. It will have to data processing logic to get the data from the file. I'm not sure if each shortcut should have its own file or if they should share a file, and i would need some kinda mega shortcut to be associated with the automation to mega upload all the shortcuts' offline data
 - [ ] Creating something in my ios app vm uses ai to mark the categories of tasks
 - [ ] rewrite quick note shortcut to put multiple lines into multiple blocks instead of multiple lines in one block
