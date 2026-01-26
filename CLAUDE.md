@@ -78,3 +78,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 ## Additional Resources
 
 - Reference the Cherri lang documentation at `/Users/alexmiller/Desktop/software/reference-repos/cherrilang.org/language` for language features and standard library functions
+
+## My Specifications to you
+
+- Whenever you make any changes to a shortcut, run it through the cherri compiler to ensure validity - at least it's able to compile
