@@ -79,6 +79,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 - [ ] Create an ios app which is in contact with my shortcuts server. when all the data is sent immediately and processed in my server, instead of getting a confirmation through the shortcut, the app will send a confirmation through an ios application. It looks like it's not that hard to sideload an application with xcode and I could then also more easily implement my offline shortcuts with data stored in the app. I could create my own shortcut app intent action which which is just called save data offline or something like that
 - [ ] Make some kind of notion → raycast or shortcut → raycast compiler just like cherri compiles to shortcuts so that I can automatically get all my shortcuts in raycast and have them be auto generated
 - [ ] Send notifications instead of shows for shortcuts for more async -- once i send in my data they can complete and ill get a notif later. Even with shazam when the song gets added or not the shortcut can just send me a notif even if it's online. i don't wann have to click done
+- [ ] Connect an audio recorder to the open source Shazam so that it can be offline
 
 ## Shortcuts to write / improve / generate
 

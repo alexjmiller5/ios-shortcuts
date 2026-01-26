@@ -1,0 +1,4 @@
+#define name Receptor 🎙️
+#define color violet
+#define glyph brainHead
+#include 'actions/web'
