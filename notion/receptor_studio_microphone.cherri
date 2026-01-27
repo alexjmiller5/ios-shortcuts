@@ -1,4 +1,8 @@
 #define name Receptor 🎙️
 #define color violet
 #define glyph brainHead
-#include 'actions/web'
+
+// Recept via Receptor app
+action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text')
+
+// TODO: Add voice dictation logic here
