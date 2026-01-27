@@ -3,16 +3,13 @@
 #define glyph brainHead
 #define from sharesheet
 #define inputs url, text
-#include 'actions/web'
+
+// Recept via Receptor app
+action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text')
 
 if ShortcutInput {
     @Thought = ShortcutInput
-    const API_Response = jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:SYNAPSE_INTAKER_API_KEY>>", "POST", {
-        "raw_text": "{Thought}"
-    }, {
-        "Content-Type": "application/json"
-    })
-    output(API_Response)
+    recept("{Thought}")
 } else {
     nothing()
 }

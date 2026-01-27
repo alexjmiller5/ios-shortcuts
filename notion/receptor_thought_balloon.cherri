@@ -1,13 +1,10 @@
 #define name Receptor 💭
 #define color violet
 #define glyph brainHead
-#define from sharesheet
-#include 'actions/web'
+
+// Recept via Receptor app
+action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text')
 
 @Thought = prompt("Enter your thought 💭")
 
-const API_Response = jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:SYNAPSE_INTAKER_API_KEY>>", "POST", {
-    "raw_text": "{Thought}"
-}, {
-    "Content-Type": "application/json"
-})
+recept("{Thought}")
