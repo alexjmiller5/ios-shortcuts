@@ -2,13 +2,8 @@
 
 ## About This Repo
 
-- The folder structure of the shortcuts will mirror the structure of the shortcuts app on iOS
+- The folder structure of the shortcuts will mirror the structure of the folder in my iCloud Shortcuts apps
 - The shortcuts will be written in [Cherri](https://cherrilang.org/)
-
-## Capabilities
-
-- Toolbox pro global variables could be used to store my Spotify and notion api keys and other duplicate global variables. This might be better than storing them in a file or hardcoding them in shortcuts
-- Scriptable has the ability to run shortcuts, and can run JS code directly from shortcuts which could be better than doing logic directly in shortcuts
 
 ## Compiling Shortcuts
 
@@ -56,15 +51,3 @@ Reference them in `.cherri` files using `<<constant:NAME>>`:
 ```cherri
 jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POST", { ... })
 ```
-
-## Enhancements
-
-- **Automatically generating shortcuts for notion databases based on their structure:**
-  - Could generate cherri code
-  - Could write an app which has complex app intents with conditionals based on database structure which can be used as shortcuts
-
-- **Syncing my custom shortcuts via code and the shortcuts app:**
-  - Reverse engineer the shortcuts database in Library/Shortcuts to have code go in and automatically update my shortcuts based on the changes I make to my cherri code
-  - Write my shortcuts for a custom app as app intents and put them in shortcuts — the shortcuts won't change but the internal commands from the app intents can change or have conditionals based on information from the app
-  - Develop another shortcut which updates the custom shortcuts by clicking it
-  - The task I wrote could actually be the details / notes I think that'd be better - AI could summarize it into the title
