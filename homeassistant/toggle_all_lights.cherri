@@ -1,0 +1,6 @@
+#define name Toggle All Lights
+#define color yellow
+#define glyph lightbulb
+#include 'actions/web'
+
+jsonRequest("<<constant:HA_WEBHOOK_BASE_URL>>/<<secret:HA_WEBHOOK_TOGGLE_ALL_LIGHTS>>", "POST")

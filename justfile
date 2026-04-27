@@ -11,4 +11,4 @@ compile-dir dir:
 
 # Compile all shortcuts
 compile-all:
-    ./scripts/compile-shortcut.sh notion/*.cherri miscellaneous/*.cherri
+    ./scripts/compile-shortcut.sh notion/*.cherri miscellaneous/*.cherri homeassistant/*.cherri

@@ -1,0 +1,6 @@
+#define name Toggle Curtains
+#define color blue
+#define glyph rectangleStack
+#include 'actions/web'
+
+jsonRequest("<<constant:HA_WEBHOOK_BASE_URL>>/<<secret:HA_WEBHOOK_TOGGLE_CURTAINS>>", "POST")
