@@ -1,0 +1,8 @@
+#define name Toggle Colors
+#define color blue
+// paintbrushPointed glyph pending upstream merge (electrikmilk/cherri#197).
+// Once that PR ships in a cherri release, uncomment the line below.
+// #define glyph paintbrushPointed
+#include 'actions/a11y'
+
+toggleColorFilters()

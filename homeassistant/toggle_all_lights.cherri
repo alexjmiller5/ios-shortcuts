@@ -1,5 +1,5 @@
 #define name Toggle All Lights
-#define color yellow
+#define color blue
 #define glyph lightbulb
 #include 'actions/web'
 

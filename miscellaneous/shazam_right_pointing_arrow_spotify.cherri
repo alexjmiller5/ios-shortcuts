@@ -3,18 +3,17 @@
 #define glyph shazam
 #include 'actions/media'
 #include 'actions/web'
-#include 'actions/scripting'
 #include 'actions/shortcuts'
 
-const shazamResult = startShazam(false)
+@shazamResult = startShazam(false)
 
-if !shazamResult {
+if !@shazamResult {
 	show("Unable to recognize the song.")
 	stop()
 }
 
-const Song = getShazamDetail(shazamResult, "Title")
-const Artist = getShazamDetail(shazamResult, "Artist")
+const Song = getShazamDetail(@shazamResult, "Title")
+const Artist = getShazamDetail(@shazamResult, "Artist")
 
 @ClientID = "<<secret:SPOTIFY_CLIENT_ID>>"
 @ClientSecret = "<<secret:SPOTIFY_CLIENT_SECRET>>"
@@ -22,40 +21,40 @@ const Artist = getShazamDetail(shazamResult, "Artist")
 @PlaylistID = "<<secret:SPOTIFY_SHAZAM_PLAYLIST_ID>>"
 
 // 1. Get a new Access Token from Spotify using the Refresh Token.
-const tokenResponse = formRequest("https://accounts.spotify.com/api/token", "POST", {
+@tokenResponse = formRequest("https://accounts.spotify.com/api/token", "POST", {
 	"grant_type": "refresh_token",
 	"refresh_token": "{RefreshToken}",
 	"client_id": "{ClientID}",
 	"client_secret": "{ClientSecret}"
 })
 
-@AccessToken = getValue(tokenResponse, "access_token")
+@AccessToken = @tokenResponse['access_token']
 
 // Prepare song and artist for the URL by encoding spaces.
 @encodedArtist = urlEncode(Artist)
 @encodedSong = urlEncode(Song)
 
 // 2. Search for the track on Spotify to get its ID.
-const searchResult = downloadURL("https://api.spotify.com/v1/search?q=track:{encodedSong}+artist:{encodedArtist}&type=track&limit=1", {
+@searchResult = downloadURL("https://api.spotify.com/v1/search?q=track:{encodedSong}+artist:{encodedArtist}&type=track&limit=1", {
 	"Authorization": "Bearer {AccessToken}"
 })
 
 // Get the track ID from the first search result.
-@trackItems = getValue(searchResult, "tracks.items")
-@firstTrack = getFirstItem(trackItems)
-@TrackID = getValue(firstTrack, "id")
+@trackItems = @searchResult['tracks.items']
+@firstTrack = getFirstItem(@trackItems)
+@TrackID = @firstTrack['id']
 
 // If no track ID was found, the song doesn't exist on Spotify.
-if !TrackID {
+if !@TrackID {
     show("Could not find {Song} by {Artist} on Spotify.")
     @receptorInput = "The Spotify API couldn't recognize {Song} by {Artist} - Add it to the Shazam Spotify playlist manually $ low priority task"
-    run("Receptor 📥", receptorInput)
+    run("Receptor 📥", @receptorInput)
     stop()
 }
 
 // 3. Add the track to the playlist.
 // This requires a POST request with a JSON body, so we use jsonRequest().
-const addResponse = jsonRequest("https://api.spotify.com/v1/playlists/{PlaylistID}/tracks", "POST", {
+@addResponse = jsonRequest("https://api.spotify.com/v1/playlists/{PlaylistID}/tracks", "POST", {
 	"uris": ["spotify:track:{TrackID}"]
 }, {
 	"Authorization": "Bearer {AccessToken}",
@@ -63,8 +62,8 @@ const addResponse = jsonRequest("https://api.spotify.com/v1/playlists/{PlaylistI
 })
 
 // Check the response for an error.
-@Error = getValue(addResponse, "error")
-if Error {
+@Error = @addResponse['error']
+if @Error {
 	show("{Song} by {Artist} could not be added to Spotify playlist.")
 	stop()
 }

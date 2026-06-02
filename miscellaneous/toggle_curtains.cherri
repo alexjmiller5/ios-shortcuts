@@ -1,6 +1,0 @@
-#define name Toggle Curtains
-// #define color custom
-// #define glyph custom
-#include 'actions/web'
-
-jsonRequest("http://home-assistant:8123/api/webhook/-O-SiE-KQqWSyyT8qolHlwsb1Y2Y8nG1", "POST")

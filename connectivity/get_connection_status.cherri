@@ -1,5 +1,6 @@
 #define color darkgray
 #define glyph feedRight
+#include 'actions/web'
 
 /*
 A JavaScript one-liner to find out if your device has connectivity — @atnbueno (2020-09-30)
@@ -10,6 +11,8 @@ v2.0.0 (2023-10-03) Now it works in Apple Watch!
 v2.1.0 (2024-03-29) Faster detection for the “offline” case
 */
 
-const URLAsRichText = url("data:text/html,<body/><script>if(navigator.onLine){r=new XMLHttpRequest();r.open('GET','https://dummyjson.com/test',!1)};try{r.send(null);o='online'}catch(e){o='offline'}document.body.textContent=o</script>")
+// Cherri treats `{...}` in text literals as variable interpolation, so the JS braces
+// are percent-encoded (%7B / %7D). The browser decodes them when parsing the data URL.
+const URLAsRichText = url("data:text/html,<body/><script>if(navigator.onLine)%7Br=new XMLHttpRequest();r.open('GET','https://dummyjson.com/test',!1)%7D;try%7Br.send(null);o='online'%7Dcatch(e)%7Bo='offline'%7Ddocument.body.textContent=o</script>")
 const JavaScriptOutput = urlDecode(URLAsRichText)
 show(JavaScriptOutput)

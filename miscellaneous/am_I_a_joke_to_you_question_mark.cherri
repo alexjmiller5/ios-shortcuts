@@ -1,6 +1,7 @@
 #define name Am I a joke to you?
 #define color red
 #define glyph lightningBolt
+#include 'actions/crypto'
 
 // List of images
 // 1. White cat
@@ -17,6 +18,6 @@ const base64Images = list("iVBORw0KGgoAAAANSUhEUgAAAUAAAAFACAYAAADNkKWqAAAAAXNSR
 
 @randomBase64Image = getRandomItem(base64Images)
 
-@randomImage = base64Decode(randomBase64Image)
+@randomImage = base64Decode(@randomBase64Image)
 
-showNotification("Am I a joke to you?", "My Battery", false, randomImage)
+showNotification("Am I a joke to you?", "My Battery", false, @randomImage)

@@ -3,7 +3,6 @@
 #define glyph brainHead
 #define from sharesheet
 #define inputs url, text
-#include 'actions/scripting'
 
 // Recept via Receptor app
 action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text')
@@ -11,7 +10,7 @@ action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text
 if ShortcutInput {
     const NameResult = getName(ShortcutInput)
     @InputName = "{NameResult}"
-    if InputName contains "https://maps.app.goo.gl" {
+    if @InputName contains "https://maps.app.goo.gl" {
         @Thought = "{ShortcutInput} $ <insert-pre-filled-message>"
     } else {
         @Thought = ShortcutInput
