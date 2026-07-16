@@ -96,7 +96,7 @@ embedded. See `docs/superpowers/specs/2026-06-26-spotify-reauth-design.md`.
 
 ## Additional Resources
 
-- Reference the Cherri lang documentation at `/Users/alexmiller/Desktop/coding/reference-repos/cherrilang.org` for language features and standard library functions
+- Reference the Cherri lang documentation at https://cherrilang.org for language features and standard library functions
 
 ## My Specifications to you
 

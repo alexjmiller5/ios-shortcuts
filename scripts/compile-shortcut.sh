@@ -9,21 +9,23 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-# Function to substitute constants from constants.txt
+# Function to substitute constants. constants.local.txt (untracked) is applied
+# first so machine-specific values win over the committed placeholders.
 substitute_constants() {
     local input_file="$1"
     local output_file="$2"
 
     cp "$input_file" "$output_file"
 
-    if [ -f "$CONSTANTS_FILE" ]; then
+    for constants_file in "constants.local.txt" "$CONSTANTS_FILE"; do
+        [ -f "$constants_file" ] || continue
         while IFS='=' read -r key value || [ -n "$key" ]; do
             # Skip empty lines and comments
             [[ -z "$key" || "$key" =~ ^# ]] && continue
             # Substitute <<constant:KEY>> with value
             sed -i '' "s|<<constant:${key}>>|${value}|g" "$output_file"
-        done < "$CONSTANTS_FILE"
-    fi
+        done < "$constants_file"
+    done
 }
 
 for file in "$@"; do

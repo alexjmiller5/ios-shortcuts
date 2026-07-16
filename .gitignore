@@ -9,3 +9,5 @@
 
 # Claude AI files
 .claude
+# Local constant overrides
+constants.local.txt

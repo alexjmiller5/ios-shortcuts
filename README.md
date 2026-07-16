@@ -5,6 +5,11 @@
 - The folder structure of the shortcuts will mirror the structure of the folder in my iCloud Shortcuts apps
 - The shortcuts will be written in [Cherri](https://cherrilang.org/)
 
+## Prerequisites
+
+- [Cherri](https://cherrilang.org/) — the `cherri` compiler
+- [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) — only needed to compile shortcuts that use `<<secret:NAME>>`
+
 ## Compiling Shortcuts
 
 The shortcuts can be compiled to a `.shortcut` file which can be imported into the Shortcuts app on iOS.
@@ -35,7 +40,7 @@ Secrets are stored in 1Password and referenced in `.cherri` files using the `<<s
 "Authorization": "Bearer <<secret:NOTION_INTEGRATION_SECRET>>"
 ```
 
-The compile script expands these to `op://Personal/NAME/credential` and uses the 1Password CLI (`op inject`) to substitute actual values.
+The compile script expands these to `op://Personal/NAME/credential` and uses the 1Password CLI (`op inject`) to substitute actual values. The `op://Personal/NAME/credential` references documented in this repo assume the author's vault layout — adapt the vault (the `VAULT` variable in `scripts/compile-shortcut.sh`) and item names to your own 1Password setup.
 
 ### Constants
 
@@ -51,6 +56,11 @@ Reference them in `.cherri` files using `<<constant:NAME>>`:
 ```cherri
 jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POST", { ... })
 ```
+
+Environment-specific values in `constants.txt` (e.g. `HA_WEBHOOK_BASE_URL`) are
+committed as placeholders. Set your real values in an untracked
+`constants.local.txt` (same `KEY=value` format) — the compile script applies it
+first, so it overrides `constants.txt`.
 
 ## Spotify token reauthorization
 
