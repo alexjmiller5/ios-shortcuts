@@ -28,7 +28,18 @@ const Artist = getShazamDetail(@shazamResult, "Artist")
 	"client_secret": "{ClientSecret}"
 })
 
-@AccessToken = @tokenResponse['access_token']
+@tokenResponseDict = getDictionary(@tokenResponse)
+@AccessToken = getValue(@tokenResponseDict, "access_token")
+
+// If the refresh token has expired, Spotify returns invalid_grant with no access
+// token. Discard it (never retry), queue the song so it isn't lost, and tell the
+// user to reauthorize. Spotify refresh tokens expire every 6 months (2026-07-20).
+if !@AccessToken {
+	@receptorInput = "Spotify token expired - couldn't add {Song} by {Artist} to the Shazam playlist. Run the Spotify Reauth shortcut, paste the new refresh token into Shazam → Spotify, then add this song manually $ low priority task"
+	run("Receptor 📥", @receptorInput)
+	show("Spotify refresh token expired. Run the Spotify Reauth shortcut, then paste the new token into this shortcut's RefreshToken field.")
+	stop()
+}
 
 // Prepare song and artist for the URL by encoding spaces.
 @encodedArtist = urlEncode(Artist)
@@ -39,10 +50,14 @@ const Artist = getShazamDetail(@shazamResult, "Artist")
 	"Authorization": "Bearer {AccessToken}"
 })
 
-// Get the track ID from the first search result.
-@trackItems = @searchResult['tracks.items']
+// Get the track ID from the first search result
+@searchResultDict = getDictionary(@searchResult)
+@tracks = getValue(@searchResultDict, "tracks")
+@tracksDict = getDictionary(@tracks)
+@trackItems = getValue(@tracksDict, "items")
 @firstTrack = getFirstItem(@trackItems)
-@TrackID = @firstTrack['id']
+@firstTrackDict = getDictionary(@firstTrack)
+@TrackID = getValue(@firstTrackDict, "id")
 
 // If no track ID was found, the song doesn't exist on Spotify.
 if !@TrackID {
@@ -62,7 +77,8 @@ if !@TrackID {
 })
 
 // Check the response for an error.
-@Error = @addResponse['error']
+@addResponseDict = getDictionary(@addResponse)
+@Error = getValue(@addResponseDict, "error")
 if @Error {
 	show("{Song} by {Artist} could not be added to Spotify playlist.")
 	stop()

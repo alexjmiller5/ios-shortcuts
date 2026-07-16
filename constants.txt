@@ -1,1 +1,2 @@
 HA_WEBHOOK_BASE_URL=http://home-assistant:8123/api/webhook
+SPOTIFY_REDIRECT_URI=http://127.0.0.1:8080/callback

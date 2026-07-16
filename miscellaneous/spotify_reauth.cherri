@@ -1,0 +1,61 @@
+#define name Spotify Reauth
+#define color green
+#define glyph key
+#include 'actions/web'
+#include 'actions/sharing'
+#include 'actions/text'
+
+// Mints a fresh Spotify refresh token on-device, in two taps:
+//   Run 1: opens Spotify's authorize page, then ends.
+//   Run 2 (after you approve + copy the redirect URL): exchanges it for a token.
+// Two runs so no prompt blocks the screen while you're in Safari. Spotify refresh
+// tokens expire every 6 months as of 2026-07-20.
+
+const ClientID = "<<secret:SPOTIFY_CLIENT_ID>>"
+const ClientSecret = "<<secret:SPOTIFY_CLIENT_SECRET>>"
+const RedirectURI = "<<constant:SPOTIFY_REDIRECT_URI>>"
+
+// Run 1 vs run 2: has the user already copied the redirect URL?
+// NOTE: Cherri's containsText hardcodes a "^" onto the pattern (anchoring it to
+// the start of the string), so a bare "127.0.0.1:8080/" never matches a URL that
+// begins with "http://". Prepending ".*" turns "^127.0.0.1:8080/" into
+// "^.*127.0.0.1:8080/" — a real "contains" match.
+@clipboard = getClipboard()
+@hasCode = containsText(@clipboard, ".*127.0.0.1:8080/")
+
+if !@hasCode {
+	// Run 1: send the user to authorize. openURL is last so nothing pops over Safari.
+	const EncodedRedirect = urlEncode(RedirectURI)
+	const AuthURL = "https://accounts.spotify.com/authorize?client_id={ClientID}&response_type=code&redirect_uri={EncodedRedirect}&scope=playlist-modify-public%20playlist-modify-private"
+	alert("Approve access in Safari, then COPY the URL you land on and run Spotify Reauth again.", "Spotify Reauth")
+	openURL(AuthURL)
+	stop()
+}
+
+// Run 2: pull the code out of the copied URL. trimWhitespace drops any trailing
+// newline the clipboard carries — that was corrupting the exchange.
+@clipParts = splitText(@clipboard, "code=")
+@afterCode = getLastItem(@clipParts)
+@Code = trimWhitespace("{afterCode}")
+
+// Exchange the code for a fresh refresh token. getDictionary coerces the
+// "Contents of URL" response so getValue can read it — dictionary['key'] alone
+// only adds an inline aggrandizement and reads nothing at runtime.
+@exchange = formRequest("https://accounts.spotify.com/api/token", "POST", {
+	"grant_type": "authorization_code",
+	"code": "{Code}",
+	"redirect_uri": "{RedirectURI}",
+	"client_id": "{ClientID}",
+	"client_secret": "{ClientSecret}"
+})
+@exchangeDict = getDictionary(@exchange)
+@NewRefreshToken = getValue(@exchangeDict, "refresh_token")
+
+if !@NewRefreshToken {
+	@errorDetail = getValue(@exchangeDict, "error_description")
+	show("Couldn't get a refresh token: {errorDetail}")
+	stop()
+}
+
+setClipboard(@NewRefreshToken)
+show("New refresh token copied to clipboard. Open 'Shazam → Spotify' in the Shortcuts editor and paste it into the RefreshToken field.")

@@ -51,3 +51,59 @@ Reference them in `.cherri` files using `<<constant:NAME>>`:
 ```cherri
 jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POST", { ... })
 ```
+
+## Spotify token reauthorization
+
+As of **2026-07-20**, Spotify refresh tokens expire every 6 months. The
+`Shazam → Spotify` shortcut keeps its refresh token baked in (for speed), and a
+companion `Spotify Reauth` shortcut mints a new one entirely on iPhone.
+
+### One-time setup
+
+1. In the [Spotify developer dashboard](https://developer.spotify.com/dashboard),
+   add the redirect URI from `constants.txt` (`SPOTIFY_REDIRECT_URI`, default
+   `http://127.0.0.1:8080/callback`) to the app's settings. It must match exactly.
+   Spotify allows the `http://127.0.0.1` loopback address but **not** `localhost`,
+   and requires HTTPS for any non-loopback URI.
+2. Ensure these 1Password secrets (Personal vault) exist: `SPOTIFY_CLIENT_ID`,
+   `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_SHAZAM_PLAYLIST_ID`, `SPOTIFY_REFRESH_TOKEN`.
+
+### When the token expires
+
+`Shazam → Spotify` detects the expired token (`invalid_grant`), queues the song
+to Receptor so it isn't lost, and tells you to reauthorize. `Spotify Reauth` is a
+**two-tap flow** (driven by the clipboard so nothing blocks the screen while
+you're in Safari):
+
+1. Run **Spotify Reauth**. It shows a brief note, then opens Spotify in Safari.
+2. Approve access. You'll land on `http://127.0.0.1:8080/callback?code=...` —
+   Safari can't load it (nothing's listening), but the URL is still in the address
+   bar. **Copy that URL** and switch back to Shortcuts.
+3. Run **Spotify Reauth again.** It reads the URL off your clipboard, exchanges it,
+   and copies the new refresh token to your clipboard.
+4. Open `Shazam → Spotify` in the Shortcuts editor and paste it into the
+   `RefreshToken` text field.
+
+> The shortcut tells run 1 from run 2 by checking whether the clipboard already
+> contains a `code=...`. If you ever get stuck, copy anything without `code=`
+> (or nothing) and it restarts from run 1.
+
+### Caveats
+
+- **Manual paste.** A running shortcut can't rewrite its own baked-in value, so
+  the new token is pasted by hand. This is the trade for keeping the hot path
+  free of a per-run file read.
+- **Recompile drift.** After an on-phone reauth, the live token on the phone is
+  newer than the `SPOTIFY_REFRESH_TOKEN` 1Password secret. **Recompiling
+  `Shazam → Spotify` from Cherri will overwrite the fresh token with the stale
+  one** — so after any recompile, re-paste the current token (or update the
+  1Password secret first). Recompiles are rare.
+
+### Test matrix (run before 2026-07-20)
+
+1. **Valid token** → silent refresh, song added to playlist.
+2. **Corrupted token** → hand-edit the `RefreshToken` field to garbage; rerun →
+   song queued to Receptor + "run Spotify Reauth" notice.
+3. **Reauth flow** → run `Spotify Reauth` (Safari opens), approve, copy the
+   redirect URL, run it again, confirm a token lands on the clipboard; paste into
+   `Shazam → Spotify`; rerun case 1 succeeds.

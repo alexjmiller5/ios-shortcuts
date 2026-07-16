@@ -61,7 +61,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 ## Directory Structure
 
 - `notion/` - Shortcuts that interact with Notion databases and Synapse intaker
-- `miscellaneous/` - Standalone utility shortcuts (Shazam→Spotify, etc.)
+- `miscellaneous/` - Standalone utility shortcuts (Shazam→Spotify, Spotify Reauth, etc.)
 - `connectivity/` - Network-related shortcuts
 - `notes-shortcuts/` - Apple Notes shortcuts
 - `files-for-cherri-gem/` - Documentation files for a custom Cherri Gemini gem
@@ -74,10 +74,29 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 - Use `nothing()` after actions with unused outputs to clear runtime memory
 - Avoid large pre-defined arrays; prefer dictionaries for better performance
 - Use raw text (single quotes) when string interpolation isn't needed
+- **Read HTTP-response values with `getValue(getDictionary(@resp), "key")` — NOT `@resp['key']`.** `formRequest`/`downloadURL`/`jsonRequest` return a "Contents of URL" value, not a `dictionary`. The `['key']` syntax compiles to an inline *property aggrandizement*, not a real "Get Value" action — and it does NOT coerce the response, so at runtime it silently reads nothing (or returns the whole blob). The combination that works: `@respDict = getDictionary(@resp)` ("Get Dictionary from Input") then `@x = getValue(@respDict, "key")` ("Get Value from Dictionary"). Verify with `cherri <file> -d` and grep the `.plist` for `detect.dictionary` + `getvalueforkey`; `WFPropertyVariableAggrandizement` on a response means the lookup is broken. Nested keys must be walked one level at a time (`getValue` can't resolve a dotted path like `tracks.items`); same coercion applies to a list item before reading from it (`getDictionary(getFirstItem(...))`).
+
+## User-token OAuth reauthorization pattern
+
+For shortcuts that act on behalf of a user (e.g. Spotify), the user refresh token
+is baked into the shortcut at compile time for speed. When it expires (Spotify:
+every 6 months as of 2026-07-20), the shortcut detects `invalid_grant` (an empty
+access token after a `refresh_token` request), discards it without retrying, and
+queues any in-flight work so it isn't lost. A separate on-device reauth shortcut
+(`spotify_reauth.cherri`) runs the Authorization Code flow without a Mac as a
+**two-run, clipboard-driven flow** — run 1 opens the authorize page (`openURL` as
+the last action) and ends; run 2 reads the redirect URL the user copied via
+`getClipboard`, then `matchText("code=([^&]+)")` + `getMatchGroup(matches, 1)`
+extracts the code → exchange for a new token → `setClipboard` so it can be pasted
+into the main shortcut's `RefreshToken` field. Two runs because iOS foregrounds
+an in-shortcut `prompt` the instant `openURL` opens Safari, so a single-run prompt
+pops over the user before they've approved; the clipboard handoff avoids any
+blocking modal during the Safari step. No PKCE needed since the client secret is
+embedded. See `docs/superpowers/specs/2026-06-26-spotify-reauth-design.md`.
 
 ## Additional Resources
 
-- Reference the Cherri lang documentation at `/Users/alexmiller/Desktop/software/reference-repos/cherrilang.org/language` for language features and standard library functions
+- Reference the Cherri lang documentation at `/Users/alexmiller/Desktop/coding/reference-repos/cherrilang.org` for language features and standard library functions
 
 ## My Specifications to you
 
