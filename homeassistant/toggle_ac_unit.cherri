@@ -1,6 +1,0 @@
-#define name Toggle AC Unit
-#define color lightblue
-#define glyph snowflake
-#include 'actions/web'
-
-jsonRequest("<<constant:HA_WEBHOOK_BASE_URL>>/<<secret:HA_WEBHOOK_TOGGLE_AC_UNIT>>", "POST")

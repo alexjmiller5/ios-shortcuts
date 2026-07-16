@@ -1,4 +1,0 @@
-#define name Toggle Curtains
-#include 'actions/web'
-
-jsonRequest("<<constant:HA_WEBHOOK_BASE_URL>>/<<secret:HA_WEBHOOK_TOGGLE_CURTAINS>>", "POST")

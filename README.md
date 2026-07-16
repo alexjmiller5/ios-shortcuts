@@ -57,7 +57,7 @@ Reference them in `.cherri` files using `<<constant:NAME>>`:
 jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POST", { ... })
 ```
 
-Environment-specific values in `constants.txt` (e.g. `HA_WEBHOOK_BASE_URL`) are
+Environment-specific values in `constants.txt` are
 committed as placeholders. Set your real values in an untracked
 `constants.local.txt` (same `KEY=value` format) — the compile script applies it
 first, so it overrides `constants.txt`.
