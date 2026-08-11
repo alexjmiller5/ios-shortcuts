@@ -8,7 +8,7 @@
 @shazamResult = startShazam(false)
 
 if !@shazamResult {
-	show("Unable to recognize the song.")
+	showNotification("Unable to recognize the song.", "Shazam → Spotify")
 	stop()
 }
 
@@ -37,7 +37,7 @@ const Artist = getShazamDetail(@shazamResult, "Artist")
 if !@AccessToken {
 	@receptorInput = "Spotify token expired - couldn't add {Song} by {Artist} to the Shazam playlist. Run the Spotify Reauth shortcut, paste the new refresh token into Shazam → Spotify, then add this song manually $ low priority task"
 	run("Receptor 📥", @receptorInput)
-	show("Spotify refresh token expired. Run the Spotify Reauth shortcut, then paste the new token into this shortcut's RefreshToken field.")
+	showNotification("Spotify refresh token expired. Run the Spotify Reauth shortcut, then paste the new token into this shortcut's RefreshToken field.", "Shazam → Spotify")
 	stop()
 }
 
@@ -61,13 +61,44 @@ if !@AccessToken {
 
 // If no track ID was found, the song doesn't exist on Spotify.
 if !@TrackID {
-    show("Could not find {Song} by {Artist} on Spotify.")
+    showNotification("Could not find {Song} by {Artist} on Spotify.", "Shazam → Spotify")
     @receptorInput = "The Spotify API couldn't recognize {Song} by {Artist} - Add it to the Shazam Spotify playlist manually $ low priority task"
     run("Receptor 📥", @receptorInput)
     stop()
 }
 
-// 3. Add the track to the playlist.
+// 3. Skip the add if the track is already in the playlist. Pages through the
+// playlist 100 tracks at a time following Spotify's `next` cursor.
+// ponytail: capped at 20 pages (2000 tracks); bump the repeat count if the playlist outgrows it
+@pageURL = "https://api.spotify.com/v1/playlists/{PlaylistID}/tracks?fields=next,items(track(id))&limit=100"
+@morePages = "yes"
+@alreadyInPlaylist = "no"
+repeat page for 20 {
+	if @morePages == "yes" && @alreadyInPlaylist == "no" {
+		@pageResponse = downloadURL("{pageURL}", {
+			"Authorization": "Bearer {AccessToken}"
+		})
+		@pageText = "{pageResponse}"
+		if @pageText contains "{TrackID}" {
+			@alreadyInPlaylist = "yes"
+		}
+		// `next` is a full URL for the next page, or JSON null (reads back empty) on the last one.
+		@pageDict = getDictionary(@pageResponse)
+		@nextPage = getValue(@pageDict, "next")
+		@nextPageText = "{nextPage}"
+		@morePages = "no"
+		if @nextPageText contains "http" {
+			@morePages = "yes"
+			@pageURL = "{nextPage}"
+		}
+	}
+}
+if @alreadyInPlaylist == "yes" {
+	showNotification("{Song} by {Artist} is already in the Spotify playlist.", "Shazam → Spotify")
+	stop()
+}
+
+// 4. Add the track to the playlist.
 // This requires a POST request with a JSON body, so we use jsonRequest().
 @addResponse = jsonRequest("https://api.spotify.com/v1/playlists/{PlaylistID}/tracks", "POST", {
 	"uris": ["spotify:track:{TrackID}"]
@@ -80,8 +111,8 @@ if !@TrackID {
 @addResponseDict = getDictionary(@addResponse)
 @Error = getValue(@addResponseDict, "error")
 if @Error {
-	show("{Song} by {Artist} could not be added to Spotify playlist.")
+	showNotification("{Song} by {Artist} could not be added to Spotify playlist.", "Shazam → Spotify")
 	stop()
 }
 
-show("{Song} by {Artist} has been added to Spotify playlist.")
+showNotification("{Song} by {Artist} has been added to Spotify playlist.", "Shazam → Spotify")

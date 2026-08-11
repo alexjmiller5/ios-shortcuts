@@ -62,11 +62,25 @@ committed as placeholders. Set your real values in an untracked
 `constants.local.txt` (same `KEY=value` format) — the compile script applies it
 first, so it overrides `constants.txt`.
 
+## Permission prompts on reinstall
+
+Shortcuts privacy grants ("Always Allow" for each domain/app) are keyed to the
+shortcut *instance*, so reimporting a recompiled `.shortcut` always re-prompts —
+there is no workaround. Mitigations: Settings → Shortcuts → Advanced toggles
+(Allow Running Scripts, Allow Sharing Large Amounts of Data) reduce some prompt
+classes, and in-editor edits (as opposed to reimports) keep existing grants.
+The wrapper architecture helps too: pinned wrappers are rarely reinstalled and
+keep their grants.
+
 ## Spotify token reauthorization
 
 As of **2026-07-20**, Spotify refresh tokens expire every 6 months. The
-`Shazam → Spotify` shortcut keeps its refresh token baked in (for speed), and a
-companion `Spotify Reauth` shortcut mints a new one entirely on iPhone.
+`Shazam → Spotify` and `Now Playing → Spotify` shortcuts keep their refresh
+token baked in (for speed), and a companion `Spotify Reauth` shortcut mints a
+new one entirely on iPhone. `Now Playing → Spotify` additionally needs the
+`user-read-currently-playing` scope — Spotify Reauth requests it, so a token
+minted before that scope was added must be re-minted for it to work. After a
+reauth, paste the new token into **both** shortcuts' `RefreshToken` fields.
 
 ### One-time setup
 

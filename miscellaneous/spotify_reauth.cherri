@@ -26,7 +26,7 @@ const RedirectURI = "<<constant:SPOTIFY_REDIRECT_URI>>"
 if !@hasCode {
 	// Run 1: send the user to authorize. openURL is last so nothing pops over Safari.
 	const EncodedRedirect = urlEncode(RedirectURI)
-	const AuthURL = "https://accounts.spotify.com/authorize?client_id={ClientID}&response_type=code&redirect_uri={EncodedRedirect}&scope=playlist-modify-public%20playlist-modify-private"
+	const AuthURL = "https://accounts.spotify.com/authorize?client_id={ClientID}&response_type=code&redirect_uri={EncodedRedirect}&scope=playlist-modify-public%20playlist-modify-private%20user-read-currently-playing"
 	alert("Approve access in Safari, then COPY the URL you land on and run Spotify Reauth again.", "Spotify Reauth")
 	openURL(AuthURL)
 	stop()

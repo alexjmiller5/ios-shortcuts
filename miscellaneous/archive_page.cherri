@@ -1,0 +1,25 @@
+#define name Archive Page
+#define color orange
+#define glyph globe
+#define from sharesheet
+#include 'actions/sharing'
+#include 'actions/web'
+
+// Opens a link on archive.ph for paywall-free reading. Share a URL to it from
+// the share sheet, or run it directly to use whatever URL is on the clipboard.
+// /newest/ shows the latest snapshot, or offers to archive if none exists.
+
+@URL: text
+if ShortcutInput {
+	@URL = "{ShortcutInput}"
+} else {
+	@clipboard = getClipboard()
+	@URL = "{clipboard}"
+}
+
+if !@URL {
+	showNotification("No link shared and the clipboard is empty.", "Archive Page")
+	stop()
+}
+
+openURL("https://archive.ph/newest/{URL}")
