@@ -1,0 +1,9 @@
+#define name 🌊 💭 🗒️
+#define color violet
+#define glyph brainHead
+
+// Flushes the Receptor thought queue (wave of thoughts → notepad).
+
+action 'com.alexmiller.receptor.ReceptQueueIntent' receptQueue()
+
+receptQueue()

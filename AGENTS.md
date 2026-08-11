@@ -61,10 +61,8 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 ## Directory Structure
 
 - `notion/` - Shortcuts that interact with Notion databases and Synapse intaker
-- `miscellaneous/` - Standalone utility shortcuts (Shazam→Spotify, Spotify Reauth, etc.)
-- `miscellaneous/assets/` - Binary assets embedded at compile time via `embedFile()` (e.g. the Water Eject tone)
-- `connectivity/` - Network-related shortcuts
-- `apple-notes/` - Apple Notes shortcuts
+- `shortcuts/` - Standalone utility shortcuts (Shazam→Spotify, Spotify Reauth, etc.) — mirrors the phone's "Shortcuts" folder
+- `shortcuts/assets/` - Binary assets embedded at compile time via `embedFile()` (Water Eject tone, Mario waow)
 - `files-for-cherri-gem/` - Documentation files for a custom Cherri Gemini gem
 - `scripts/` - Build scripts (`compile-shortcut.sh`)
 - `constants.txt` - Non-sensitive constants for compilation

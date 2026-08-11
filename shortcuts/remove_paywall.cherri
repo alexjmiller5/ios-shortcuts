@@ -1,0 +1,26 @@
+#define name Remove Paywall
+#define color green
+#define glyph compass
+#define from sharesheet
+#include 'actions/sharing'
+#include 'actions/web'
+
+// Opens a link on removepaywall.com for paywall-free reading. Share a URL to
+// it from the share sheet, or run it directly to use whatever URL is on the
+// clipboard. Same shape as Archive Page — A/B testing which service works
+// better; keep whichever wins.
+
+@URL: text
+if ShortcutInput {
+	@URL = "{ShortcutInput}"
+} else {
+	@clipboard = getClipboard()
+	@URL = "{clipboard}"
+}
+
+if !@URL {
+	showNotification("No link shared and the clipboard is empty.", "Remove Paywall")
+	stop()
+}
+
+openURL("https://removepaywall.com/search?url={URL}")

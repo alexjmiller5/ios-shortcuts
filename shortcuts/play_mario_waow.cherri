@@ -1,0 +1,12 @@
+#define name Play Mario Waow
+#define color pink
+#define glyph speaker
+
+// Plays the Mario "waow" clip. Audio embedded at compile time.
+
+#include 'actions/crypto'
+#include 'actions/media'
+
+const audioFile = embedFile("assets/mario-waow.mp3")
+@audio = base64Decode(audioFile)
+playSound(@audio)

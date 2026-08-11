@@ -1,4 +1,4 @@
-#define name Am I a joke to you?
+#define name My Battery
 #define color red
 #define glyph lightningBolt
 #include 'actions/crypto'

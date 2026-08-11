@@ -3,7 +3,7 @@
 #define glyph iPhone
 #include 'actions/web'
 
-@Title = prompt("Enter the title for the video")
+@Title = prompt("Enter the short form video title")
 
 const API_Response = jsonRequest("https://api.notion.com/v1/pages", "POST", {
     "parent": {
