@@ -75,12 +75,8 @@ keep their grants.
 ## Spotify token reauthorization
 
 As of **2026-07-20**, Spotify refresh tokens expire every 6 months. The
-`Shazam → Spotify` and `Now Playing → Spotify` shortcuts keep their refresh
-token baked in (for speed), and a companion `Spotify Reauth` shortcut mints a
-new one entirely on iPhone. `Now Playing → Spotify` additionally needs the
-`user-read-currently-playing` scope — Spotify Reauth requests it, so a token
-minted before that scope was added must be re-minted for it to work. After a
-reauth, paste the new token into **both** shortcuts' `RefreshToken` fields.
+`Shazam → Spotify` shortcut keeps its refresh token baked in (for speed), and a
+companion `Spotify Reauth` shortcut mints a new one entirely on iPhone.
 
 ### One-time setup
 

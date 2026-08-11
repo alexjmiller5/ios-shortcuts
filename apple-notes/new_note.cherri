@@ -1,0 +1,10 @@
+#define name New Note
+#define color yellow
+#define glyph note
+
+// Prompt for text and save it as a new note in the default Notes folder.
+
+action 'com.apple.mobilenotes.SharingExtension' createNote(text body: 'WFCreateNoteInput')
+
+@Thought = prompt("What do you want to say?")
+createNote("{Thought}")

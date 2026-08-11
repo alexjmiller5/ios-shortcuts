@@ -1,0 +1,43 @@
+#define name Scan QR-code
+#define color gray
+#define glyph cameraViewFinder
+#define from quickactions
+#define inputs image
+#include 'actions/web'
+#include 'actions/sharing'
+
+// Reads a QR code from a shared image (quick action) or, when run directly,
+// from an interactive screenshot selection. Decodes it via api.qrserver.com,
+// copies the payload, and opens it if it's a URL.
+
+action 'takescreenshot' takeInteractiveScreenshot() {
+	"WFTakeScreenshotScreenshotType": "Interactive",
+	"WFTakeScreenshotActionInteractiveSelectionType": "Custom"
+}
+
+@File: variable
+if ShortcutInput {
+	@File = ShortcutInput
+} else {
+	@File = takeInteractiveScreenshot()
+}
+
+@resp = formRequest("http://api.qrserver.com/v1/read-qr-code/", "POST", {
+	"file": "{File}"
+})
+
+// Response root is an array: [{"symbol": [{"data": ..., "error": ...}]}]
+@respDict = getDictionary(@resp)
+@symbol = getValue(@respDict, "symbol")
+@firstSymbol = getFirstItem(@symbol)
+@firstSymbolDict = getDictionary(@firstSymbol)
+@Data = getValue(@firstSymbolDict, "data")
+
+@URLs = getURLs("{Data}")
+if !@URLs {
+	show("{Data}")
+	setClipboard(@Data)
+} else {
+	const firstURL = getFirstItem(@URLs)
+	openURL("{firstURL}")
+}

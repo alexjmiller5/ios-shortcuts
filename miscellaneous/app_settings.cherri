@@ -1,0 +1,12 @@
+#define name App Settings
+#define color gray
+#define glyph gear
+#include 'actions/web'
+
+// Jumps into the Settings page of the current app via the App-prefs: scheme.
+// Meant to run from Back Tap / Action button while the app is open.
+
+action 'getcurrentapp' getCurrentApp(): variable
+
+@app = getCurrentApp()
+openURL("App-prefs:{app['Bundle Identifier']}")

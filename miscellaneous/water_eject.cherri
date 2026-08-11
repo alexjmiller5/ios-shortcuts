@@ -1,0 +1,14 @@
+#define name Water Eject
+#define color blue
+#define glyph waterDrop
+#include 'actions/device'
+#include 'actions/crypto'
+#include 'actions/media'
+
+// Plays the speaker-cleaning tone at full volume (same trick Apple Watch uses).
+// The tone is embedded at compile time from assets/water-eject.m4a.
+
+setVolume(1.0)
+const audioFile = embedFile("assets/water-eject.m4a")
+@audio = base64Decode(audioFile)
+playSound(@audio)
