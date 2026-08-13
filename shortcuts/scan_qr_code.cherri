@@ -27,7 +27,8 @@ if ShortcutInput {
 })
 
 // Response root is an array: [{"symbol": [{"data": ..., "error": ...}]}]
-@respDict = getDictionary(@resp)
+@respFirst = getFirstItem(@resp)
+@respDict = getDictionary(@respFirst)
 @symbol = getValue(@respDict, "symbol")
 @firstSymbol = getFirstItem(@symbol)
 @firstSymbolDict = getDictionary(@firstSymbol)

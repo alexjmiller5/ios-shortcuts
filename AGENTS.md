@@ -22,7 +22,8 @@ The compile script processes files in this order:
 1. Substitutes `<<constant:NAME>>` with values from `constants.txt`
 2. Converts `<<secret:NAME>>` to `op://Personal/NAME/credential`
 3. Runs `op inject` to substitute actual secret values from 1Password
-4. Compiles with `cherri`
+4. Compiles with `cherri --skip-sign` (from the file's directory, so `embedFile()` paths resolve)
+5. Applies `scripts/patch-shortcut-plist.py` (plist structures cherri can't express — currently file-typed form values, which cherri v2.3 has no syntax for) and signs with `shortcuts sign`
 
 ## Secrets and Constants
 

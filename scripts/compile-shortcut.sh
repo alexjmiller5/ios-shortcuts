@@ -58,8 +58,14 @@ for file in "$@"; do
 
     echo "🍒 Compiling $base_name..."
     # cherri resolves embedFile() paths relative to its CWD, not the source
-    # file — compile from the file's directory so "assets/..." references work
-    (cd "$dir_name" && cherri ".tmp_${base_name}")
+    # file — compile from the file's directory so "assets/..." references work.
+    # Compile unsigned, apply plist patches cherri can't express, then sign.
+    (cd "$dir_name" && cherri ".tmp_${base_name}" --skip-sign)
+    shortcut_name=$(sed -n 's/^#define name //p' "$file" | head -1)
+    unsigned="${dir_name}/${shortcut_name}_unsigned.shortcut"
+    python3 "$(dirname "$0")/patch-shortcut-plist.py" "$unsigned"
+    shortcuts sign -i "$unsigned" -o "${dir_name}/${shortcut_name}.shortcut" 2>/dev/null
+    rm -f "$unsigned"
 
     # Clean up immediately for this iteration
     rm -f "$temp_file" "$temp_file_constants" "$temp_file_secrets"
