@@ -11,7 +11,7 @@ if ShortcutInput {
     const NameResult = getName(ShortcutInput)
     @InputName = "{NameResult}"
     if @InputName contains "https://maps.app.goo.gl" {
-        @Thought = "{ShortcutInput} $ Val Thorens Ski Trip"
+        @Thought = "{ShortcutInput} $ <insert-pre-filled-message>"
     } else {
         @Thought = ShortcutInput
     }
