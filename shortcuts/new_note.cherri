@@ -2,9 +2,29 @@
 #define color yellow
 #define glyph noteTextPlus
 
-// Prompt for text and save it as a new note in the default Notes folder.
+// Prompt for text and save it as a new note in the default "Notes" folder.
+// Folder params mirror the hand-built original so the action shows
+// "in 📁 Notes" instead of an unset Folder.
 
-action 'com.apple.mobilenotes.SharingExtension' createNote(text body: 'WFCreateNoteInput')
+action 'com.apple.mobilenotes.SharingExtension' createNote(text body: 'WFCreateNoteInput') {
+	"AppIntentDescriptor": {
+		"AppIntentIdentifier": "CreateNoteLinkAction",
+		"BundleIdentifier": "com.apple.mobilenotes",
+		"Name": "Notes",
+		"TeamIdentifier": "0000000000"
+	},
+	"OpenWhenRun": false,
+	"WFNoteGroup": {
+		"DisplayString": "Notes",
+		"Identifier": "applenotes:folder/DefaultFolder-CloudKit"
+	},
+	"folder": {
+		"identifier": "applenotes:folder/DefaultFolder-CloudKit",
+		"subtitle": {"key": "Notes"},
+		"symbol": {"systemName": "folder"},
+		"title": {"key": "Notes"}
+	}
+}
 
-@Thought = prompt("What do you want to say?")
+const Thought = prompt("What do you want to say?")
 createNote("{Thought}")
