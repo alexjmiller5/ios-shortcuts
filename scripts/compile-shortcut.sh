@@ -57,7 +57,9 @@ for file in "$@"; do
     op inject -i "$temp_file_secrets" -o "$temp_file"
 
     echo "🍒 Compiling $base_name..."
-    cherri "$temp_file"
+    # cherri resolves embedFile() paths relative to its CWD, not the source
+    # file — compile from the file's directory so "assets/..." references work
+    (cd "$dir_name" && cherri ".tmp_${base_name}")
 
     # Clean up immediately for this iteration
     rm -f "$temp_file" "$temp_file_constants" "$temp_file_secrets"
