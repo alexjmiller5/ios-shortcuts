@@ -1,6 +1,6 @@
 #define name Scan QR-code
-#define color gray
-#define glyph cameraViewFinder
+#define color darkgray
+#define glyph QRViewFinder
 #define from quickactions
 #define inputs image
 #include 'actions/web'

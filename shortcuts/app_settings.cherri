@@ -1,5 +1,5 @@
 #define name App Settings
-#define color gray
+#define color darkgray
 #define glyph gear
 #include 'actions/web'
 

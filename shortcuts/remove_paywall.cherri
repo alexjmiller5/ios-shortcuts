@@ -1,6 +1,6 @@
 #define name Remove Paywall
 #define color green
-#define glyph compass
+#define glyph unlockButton
 #define from sharesheet
 #include 'actions/sharing'
 #include 'actions/web'

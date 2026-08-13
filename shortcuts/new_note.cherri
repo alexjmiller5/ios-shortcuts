@@ -1,6 +1,6 @@
 #define name New Note
 #define color yellow
-#define glyph note
+#define glyph noteTextPlus
 
 // Prompt for text and save it as a new note in the default Notes folder.
 

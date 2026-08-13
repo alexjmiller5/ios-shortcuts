@@ -1,5 +1,5 @@
 #define name Water Eject
-#define color blue
+#define color darkblue
 #define glyph waterDrop
 #include 'actions/device'
 #include 'actions/crypto'

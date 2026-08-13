@@ -1,6 +1,6 @@
 #define name Play Mario Waow
 #define color pink
-#define glyph speaker
+#define glyph volumeHigh
 
 // Plays the Mario "waow" clip. Audio embedded at compile time.
 
