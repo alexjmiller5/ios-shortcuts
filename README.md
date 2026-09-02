@@ -40,7 +40,7 @@ Secrets are stored in 1Password and referenced in `.cherri` files using the `<<s
 "Authorization": "Bearer <<secret:NOTION_INTEGRATION_SECRET>>"
 ```
 
-The compile script expands these to `op://Personal/NAME/credential` and uses the 1Password CLI (`op inject`) to substitute actual values. The `op://Personal/NAME/credential` references documented in this repo assume the author's vault layout — adapt the vault (the `VAULT` variable in `scripts/compile-shortcut.sh`) and item names to your own 1Password setup.
+The compile script expands these to fields of a single `iOS Shortcuts ENV` item (`op://<vault>/iOS Shortcuts ENV/NAME`) and uses the 1Password CLI (`op inject`) to substitute actual values at compile time — adapt the `VAULT` / `ENV_ITEM` variables in `scripts/compile-shortcut.sh` to your own 1Password setup.
 
 ### Constants
 
@@ -85,7 +85,7 @@ companion `Spotify Reauth` shortcut mints a new one entirely on iPhone.
    `http://127.0.0.1:8080/callback`) to the app's settings. It must match exactly.
    Spotify allows the `http://127.0.0.1` loopback address but **not** `localhost`,
    and requires HTTPS for any non-loopback URI.
-2. Ensure these 1Password secrets (Personal vault) exist: `SPOTIFY_CLIENT_ID`,
+2. Ensure the `iOS Shortcuts ENV` item has these fields: `SPOTIFY_CLIENT_ID`,
    `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_SHAZAM_PLAYLIST_ID`, `SPOTIFY_REFRESH_TOKEN`.
 
 ### When the token expires

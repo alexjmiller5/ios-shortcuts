@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-VAULT="Personal"
+VAULT="uk3hfwomwjxl33uxpjurzpr7z4"  # "iOS Shortcuts" vault (id - rename-proof)
+ENV_ITEM="iOS Shortcuts ENV"        # one item, one field per <<secret:NAME>>
 CONSTANTS_FILE="constants.txt"
 
 if [ $# -eq 0 ]; then
@@ -50,8 +51,8 @@ for file in "$@"; do
     # Step 1: Substitute <<constant:NAME>> with values from constants.txt
     substitute_constants "$file" "$temp_file_constants"
 
-    # Step 2: Convert <<secret:NAME>> to op://VAULT/NAME/credential
-    sed -E "s|<<secret:([A-Za-z_][A-Za-z0-9_]*)>>|op://${VAULT}/\1/credential|g" "$temp_file_constants" > "$temp_file_secrets"
+    # Step 2: Convert <<secret:NAME>> to op://VAULT/ENV_ITEM/NAME
+    sed -E "s|<<secret:([A-Za-z_][A-Za-z0-9_]*)>>|op://${VAULT}/${ENV_ITEM}/\1|g" "$temp_file_constants" > "$temp_file_secrets"
 
     # Step 3: Run op inject to substitute the op:// references
     op inject -i "$temp_file_secrets" -o "$temp_file"
