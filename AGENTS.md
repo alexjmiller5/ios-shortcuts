@@ -18,12 +18,26 @@ cherri <file.cherri>
 ./scripts/compile-shortcut.sh <file1.cherri> [file2.cherri] ...
 ```
 
-The compile script processes files in this order:
+The compile script processes each file in a private build directory:
+
 1. Substitutes `<<constant:NAME>>` from untracked `constants.local.txt` first, then `constants.txt` for defaults
-2. Converts `<<secret:NAME>>` to `op://<VAULT>/<ENV_ITEM>/NAME` using the compile script's `VAULT` and `ENV_ITEM` variables
-3. Runs `op inject` to substitute actual secret values from 1Password
-4. Compiles with `cherri --skip-sign` (from the file's directory, so `embedFile()` paths resolve)
-5. Applies `scripts/patch-shortcut-plist.py` (plist structures cherri can't express - currently file-typed form values, which cherri v2.3 has no syntax for) and signs with `shortcuts sign`
+2. Converts `<<secret:NAME>>` to `op://<VAULT>/<ENV_ITEM>/NAME`; both references in the script are stable IDs
+3. Streams `op inject` output through a mode-600 named pipe into Cherri, never a regular plaintext source file
+4. Compiles with `cherri --skip-sign` from the source directory for `embedFile()` paths; unsigned output stays in the mode-700 build directory
+5. Applies `scripts/patch-shortcut-plist.py`, then signs to a staged file and replaces the signed destination only after success
+
+Cherri v2.3 supports FIFO source input. Native `shortcuts sign` requires a
+regular input file on the tested macOS; FIFO and `/dev/fd` inputs fail with
+"The file couldn’t be opened because it isn’t in the correct format."
+The unsigned credential-bearing binary is therefore transiently on disk with
+mode 600. EXIT/INT/TERM/HUP cleanup stops active children and removes the build
+directory, including unsigned and partial signed outputs. SIGKILL, OS crashes,
+and power loss cannot run shell traps and can leave that private directory.
+
+Injected tool output is suppressed because diagnostics can quote credentials.
+For compiler diagnostics use only placeholder/dummy scratch sources. Run the
+focused regression with `python3 scripts/test-compile-shortcut.py`: it uses real
+Cherri, stub injection/signing, dummy constants and assets, and no vault calls.
 
 ## Secrets and Constants
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+umask 077
 
 VAULT="uk3hfwomwjxl33uxpjurzpr7z4"  # "iOS Shortcuts" vault (id - rename-proof)
-ENV_ITEM="iOS Shortcuts ENV"        # one item, one field per <<secret:NAME>>
+ENV_ITEM="p6cdlljtfcdwbyzznatrcmohdi"  # ENV item id, one field per <<secret:NAME>>
 CONSTANTS_FILE="constants.txt"
 
 if [ $# -eq 0 ]; then
@@ -35,41 +36,75 @@ for file in "$@"; do
         continue
     fi
 
-    # Create hidden temp files in the same directory as the source
-    # This ensures the compiled output lands in the correct folder
-    dir_name=$(dirname "$file")
-    base_name=$(basename "$file")
-    temp_file="${dir_name}/.tmp_${base_name}"
-    temp_file_constants="${dir_name}/.tmp1_${base_name}"
-    temp_file_secrets="${dir_name}/.tmp2_${base_name}"
+    temp_dir=""
+    inject_pid=""
+    build_pid=""
+    cleanup() {
+        # Stop writers before unlinking their outputs, including a producer
+        # blocked opening the FIFO if Cherri fails before reading it.
+        for pid in "$inject_pid" "$build_pid"; do
+            [ -n "$pid" ] || continue
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+        done
+        if [ -n "$temp_dir" ]; then
+            rm -f "$temp_dir"/*
+            rmdir "$temp_dir"
+        fi
+    }
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    trap 'exit 129' HUP
 
-    # cleanup trap to ensure temp files are deleted even on error
-    trap 'rm -f "$temp_file" "$temp_file_constants" "$temp_file_secrets"' EXIT
+    dir_name=$(cd "$(dirname "$file")" && pwd)
+    temp_dir=$(mktemp -d "${dir_name}/.compile-shortcut.XXXXXX")
+    temp_file="$temp_dir/input.cherri"
+    echo "Processing $file..."
 
-    echo "🔐 Processing $file..."
+    substitute_constants "$file" "$temp_dir/constants.cherri"
+    sed -E "s|<<secret:([A-Za-z_][A-Za-z0-9_]*)>>|op://${VAULT}/${ENV_ITEM}/\1|g" \
+        "$temp_dir/constants.cherri" > "$temp_dir/references.txt"
+    mkfifo "$temp_file"
 
-    # Step 1: Substitute <<constant:NAME>> with values from constants.txt
-    substitute_constants "$file" "$temp_file_constants"
+    # Cherri v2.3 reads FIFO input. Plaintext source exists only in the pipe.
+    # Suppress tool diagnostics: compiler errors can quote injected source.
+    op inject -i "$temp_dir/references.txt" > "$temp_file" 2>/dev/null &
+    inject_pid=$!
+    (cd "$dir_name" && exec cherri "$temp_file" --skip-sign) >/dev/null 2>&1 &
+    build_pid=$!
+    if ! wait "$build_pid"; then
+        echo "Error: compilation failed; validate with dummy credentials for diagnostics." >&2
+        exit 1
+    fi
+    build_pid=""
+    if ! wait "$inject_pid"; then
+        echo "Error: secret injection failed." >&2
+        exit 1
+    fi
+    inject_pid=""
 
-    # Step 2: Convert <<secret:NAME>> to op://VAULT/ENV_ITEM/NAME
-    sed -E "s|<<secret:([A-Za-z_][A-Za-z0-9_]*)>>|op://${VAULT}/${ENV_ITEM}/\1|g" "$temp_file_constants" > "$temp_file_secrets"
-
-    # Step 3: Run op inject to substitute the op:// references
-    op inject -i "$temp_file_secrets" -o "$temp_file"
-
-    echo "🍒 Compiling $base_name..."
-    # cherri resolves embedFile() paths relative to its CWD, not the source
-    # file — compile from the file's directory so "assets/..." references work.
-    # Compile unsigned, apply plist patches cherri can't express, then sign.
-    (cd "$dir_name" && cherri ".tmp_${base_name}" --skip-sign)
     shortcut_name=$(sed -n 's/^#define name //p' "$file" | head -1)
-    unsigned="${dir_name}/${shortcut_name}_unsigned.shortcut"
-    python3 "$(dirname "$0")/patch-shortcut-plist.py" "$unsigned"
-    shortcuts sign -i "$unsigned" -o "${dir_name}/${shortcut_name}.shortcut" 2>/dev/null
-    rm -f "$unsigned"
+    unsigned="$temp_dir/${shortcut_name}_unsigned.shortcut"
+    python3 "$(dirname "$0")/patch-shortcut-plist.py" "$unsigned" >/dev/null 2>&1 &
+    build_pid=$!
+    if ! wait "$build_pid"; then
+        echo "Error: plist patch failed." >&2
+        exit 1
+    fi
+    build_pid=""
 
-    # Clean up immediately for this iteration
-    rm -f "$temp_file" "$temp_file_constants" "$temp_file_secrets"
-    trap - EXIT
+    # macOS signing requires a regular input file. Keep it private, clean
+    # both outputs on failure, and replace the destination only on success.
+    shortcuts sign -i "$unsigned" -o "$temp_dir/signed.shortcut" >/dev/null 2>&1 &
+    build_pid=$!
+    if ! wait "$build_pid"; then
+        echo "Error: signing failed." >&2
+        exit 1
+    fi
+    build_pid=""
+    mv -f "$temp_dir/signed.shortcut" "$dir_name/${shortcut_name}.shortcut"
+    cleanup
+    trap - EXIT INT TERM HUP
 done
-echo "✨ Done."
+echo "Done."

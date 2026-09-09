@@ -40,7 +40,30 @@ Secrets are stored in 1Password and referenced in `.cherri` files using the `<<s
 "Authorization": "Bearer <<secret:NOTION_INTEGRATION_SECRET>>"
 ```
 
-The compile script expands these to fields of a single `iOS Shortcuts ENV` item (`op://<vault>/iOS Shortcuts ENV/NAME`) and uses the 1Password CLI (`op inject`) to substitute actual values at compile time — adapt the `VAULT` / `ENV_ITEM` variables in `scripts/compile-shortcut.sh` to your own 1Password setup.
+The compile script expands these to fields of a single `iOS Shortcuts ENV`
+item (`op://<vault-id>/<item-id>/NAME`). Adapt the `VAULT` / `ENV_ITEM` IDs in
+`scripts/compile-shortcut.sh` to your own 1Password setup. `op inject` streams
+values through a private named pipe into Cherri; it never writes injected
+plaintext `.cherri` source to a regular file.
+
+Cherri v2.3 accepts this FIFO input, but native `shortcuts sign` rejects FIFO
+and `/dev/fd` input on the tested macOS. The compiler's unsigned binary therefore
+exists briefly as a mode-600 file in a mode-700 build directory. After the plist
+patch, signing writes to a staged file. Only successful signing replaces the
+usual `<source-directory>/<shortcut-name>.shortcut` destination, which contains
+the runtime credential by design. Build errors and INT/TERM/HUP stop active
+children and remove unsigned/partial signed outputs. SIGKILL, an OS crash, or
+power loss cannot run cleanup and can leave the private `.compile-shortcut.*`
+directory beside the source.
+
+Tool diagnostics are suppressed to avoid quoting injected credentials. Diagnose
+compiler errors with a dummy scratch source and `cherri --skip-sign`. The focused
+build regression requires macOS, Python 3 and Cherri, uses dummy credentials and
+stub injection/signing, and never contacts a vault or installs/runs a shortcut:
+
+```bash
+python3 scripts/test-compile-shortcut.py
+```
 
 ### Constants
 
@@ -109,9 +132,9 @@ Pending integration, in order:
    ensure the caller's `MODAL_KEY` / `MODAL_SECRET` fields are provisioned.
 2. Preserve the fallback artifacts, then build the source with
    `just compile shortcuts/shazam_right_pointing_arrow_spotify.cherri`.
-   This uses local constant overrides, injects the ENV item fields, compiles
-   unsigned, applies plist patches, and signs the `.shortcut`. It replaces
-   the output binary at `shortcuts/Shazam → Spotify.shortcut` if present.
+   This uses local constant overrides, streams the ENV item fields through a
+   FIFO to the compiler, applies plist patches, and signs the `.shortcut`.
+   Successful signing replaces `shortcuts/Shazam → Spotify.shortcut` if present.
 3. Import the signed build on the Mac and transfer/import it on the phone,
    replacing the installed Shazam shortcut. Reimports prompt for permissions.
 4. On the phone, recognize a song: verify the service's added notification,
