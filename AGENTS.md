@@ -19,23 +19,25 @@ cherri <file.cherri>
 ```
 
 The compile script processes files in this order:
-1. Substitutes `<<constant:NAME>>` with values from `constants.txt`
-2. Converts `<<secret:NAME>>` to `op://Personal/NAME/credential`
+1. Substitutes `<<constant:NAME>>` from untracked `constants.local.txt` first, then `constants.txt` for defaults
+2. Converts `<<secret:NAME>>` to `op://<VAULT>/<ENV_ITEM>/NAME` using the compile script's `VAULT` and `ENV_ITEM` variables
 3. Runs `op inject` to substitute actual secret values from 1Password
 4. Compiles with `cherri --skip-sign` (from the file's directory, so `embedFile()` paths resolve)
-5. Applies `scripts/patch-shortcut-plist.py` (plist structures cherri can't express — currently file-typed form values, which cherri v2.3 has no syntax for) and signs with `shortcuts sign`
+5. Applies `scripts/patch-shortcut-plist.py` (plist structures cherri can't express - currently file-typed form values, which cherri v2.3 has no syntax for) and signs with `shortcuts sign`
 
 ## Secrets and Constants
 
 ### Secrets (`<<secret:NAME>>`)
-Stored in 1Password under the "Personal" vault with the "Developer Credentials" tag. Referenced as:
+Stored as fields of the single `iOS Shortcuts ENV` item in the vault selected
+by `scripts/compile-shortcut.sh`. Referenced as:
 ```cherri
 @ClientID = "<<secret:SPOTIFY_CLIENT_ID>>"
 "Authorization": "Bearer <<secret:NOTION_INTEGRATION_SECRET>>"
 ```
 
 ### Constants (`<<constant:NAME>>`)
-Stored in `constants.txt` at repo root in `KEY=value` format:
+Stored in `constants.txt` at repo root in `KEY=value` format. Environment-specific
+values are placeholders; untracked `constants.local.txt` overrides them:
 ```
 SYNAPSE_INTAKER_BASE_URL=https://example.com/api
 ```
@@ -62,7 +64,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 ## Directory Structure
 
 - `notion/` - Shortcuts that interact with Notion databases and Synapse intaker
-- `shortcuts/` - Standalone utility shortcuts (Shazam→Spotify, Spotify Reauth, etc.) — mirrors the phone's "Shortcuts" folder
+- `shortcuts/` - Standalone utility shortcuts (Shazam→Spotify, Spotify Reauth, etc.) - mirrors the phone's "Shortcuts" folder
 - `shortcuts/assets/` - Binary assets embedded at compile time via `embedFile()` (Water Eject tone, Mario waow)
 - `scripts/` - Build scripts (`compile-shortcut.sh`)
 - `constants.txt` - Non-sensitive constants for compilation
@@ -73,25 +75,27 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 - Use `nothing()` after actions with unused outputs to clear runtime memory
 - Avoid large pre-defined arrays; prefer dictionaries for better performance
 - Use raw text (single quotes) when string interpolation isn't needed
-- **Read HTTP-response values with `getValue(getDictionary(@resp), "key")` — NOT `@resp['key']`.** `formRequest`/`downloadURL`/`jsonRequest` return a "Contents of URL" value, not a `dictionary`. The `['key']` syntax compiles to an inline *property aggrandizement*, not a real "Get Value" action — and it does NOT coerce the response, so at runtime it silently reads nothing (or returns the whole blob). The combination that works: `@respDict = getDictionary(@resp)` ("Get Dictionary from Input") then `@x = getValue(@respDict, "key")` ("Get Value from Dictionary"). Verify with `cherri <file> -d` and grep the `.plist` for `detect.dictionary` + `getvalueforkey`; `WFPropertyVariableAggrandizement` on a response means the lookup is broken. Nested keys must be walked one level at a time (`getValue` can't resolve a dotted path like `tracks.items`); same coercion applies to a list item before reading from it (`getDictionary(getFirstItem(...))`).
+- **Read HTTP-response values with `getValue(getDictionary(@resp), "key")` - NOT `@resp['key']`.** `formRequest`/`downloadURL`/`jsonRequest` return a "Contents of URL" value, not a `dictionary`. The `['key']` syntax compiles to an inline *property aggrandizement*, not a real "Get Value" action - and it does NOT coerce the response, so at runtime it silently reads nothing (or returns the whole blob). The combination that works: `@respDict = getDictionary(@resp)` ("Get Dictionary from Input") then `@x = getValue(@respDict, "key")` ("Get Value from Dictionary"). Verify with `cherri <file> -d` and grep the `.plist` for `detect.dictionary` + `getvalueforkey`; `WFPropertyVariableAggrandizement` on a response means the lookup is broken. Nested keys must be walked one level at a time (`getValue` can't resolve a dotted path like `tracks.items`); same coercion applies to a list item before reading from it (`getDictionary(getFirstItem(...))`).
 
-## User-token OAuth reauthorization pattern
+## Shazam capture source and validation
 
-For shortcuts that act on behalf of a user (e.g. Spotify), the user refresh token
-is baked into the shortcut at compile time for speed. When it expires (Spotify:
-every 6 months as of 2026-07-20), the shortcut detects `invalid_grant` (an empty
-access token after a `refresh_token` request), discards it without retrying, and
-queues any in-flight work so it isn't lost. A separate on-device reauth shortcut
-(`spotify_reauth.cherri`) runs the Authorization Code flow without a Mac as a
-**two-run, clipboard-driven flow** — run 1 opens the authorize page (`openURL` as
-the last action) and ends; run 2 reads the redirect URL the user copied via
-`getClipboard`, then `matchText("code=([^&]+)")` + `getMatchGroup(matches, 1)`
-extracts the code → exchange for a new token → `setClipboard` so it can be pasted
-into the main shortcut's `RefreshToken` field. Two runs because iOS foregrounds
-an in-shortcut `prompt` the instant `openURL` opens Safari, so a single-run prompt
-pops over the user before they've approved; the clipboard handoff avoids any
-blocking modal during the Safari step. No PKCE needed since the client secret is
-embedded. See `docs/superpowers/specs/2026-06-26-spotify-reauth-design.md`.
+`shortcuts/shazam_right_pointing_arrow_spotify.cherri` is a capture-service
+client: Shazam metadata -> one JSON POST -> dictionary coercion -> `message`
+notification. Its only configuration is `MUSIC_SYNC_CAPTURE_URL`, `MODAL_KEY`,
+and `MODAL_SECRET`; provider credentials, playlist IDs, and storage details
+belong to the service.
+
+Validate without secrets by substituting dummy values in a scratch copy, then
+running `cherri <scratch-file.cherri> --skip-sign -d`. Inspect the plist's URL,
+POST method, four JSON fields, auth headers, and explicit response dictionary
+conversion before the `message` lookup. Do not use the regular compile script
+for dummy validation: it injects real credentials and signs the output.
+
+Source and installed/binary versions must not be assumed identical. Retain
+fallback sources, binaries, Reauth documentation, redirect constant, credentials,
+and the developer app until phone E2E confirms both added and already-present
+results. The README holds the pending cutover sequence. Compiling is not phone
+E2E and does not authorize installation or fallback deletion.
 
 ## Additional Resources
 

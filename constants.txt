@@ -1,1 +1,2 @@
 SPOTIFY_REDIRECT_URI=http://127.0.0.1:8080/callback
+MUSIC_SYNC_CAPTURE_URL=https://example.modal.run/capture

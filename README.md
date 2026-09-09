@@ -72,58 +72,53 @@ classes, and in-editor edits (as opposed to reimports) keep existing grants.
 The wrapper architecture helps too: pinned wrappers are rarely reinstalled and
 keep their grants.
 
-## Spotify token reauthorization
+## Shazam → Spotify capture client
 
-As of **2026-07-20**, Spotify refresh tokens expire every 6 months. The
-`Shazam → Spotify` shortcut keeps its refresh token baked in (for speed), and a
-companion `Spotify Reauth` shortcut mints a new one entirely on iPhone.
+`shortcuts/shazam_right_pointing_arrow_spotify.cherri` recognizes a song and
+POSTs `title`, `artist`, `apple_music_id`, and `shazam_url` as JSON to
+`MUSIC_SYNC_CAPTURE_URL`. It sends `Modal-Key` and `Modal-Secret` headers from
+`MODAL_KEY` and `MODAL_SECRET` in the `iOS Shortcuts ENV` item. The caller needs
+only the capture endpoint and these auth headers. Matching, playlist selection,
+and storage are owned by the service.
 
-### One-time setup
+The response is explicitly converted to a dictionary before reading `message`,
+which is shown as a notification. Unrecognized audio stops before the request;
+an empty message produces a failure notification. Shortcuts may stop on a
+transport/HTTP error or an invalid dictionary response before that notification.
+Compilation does not verify these runtime behaviors.
 
-1. In the [Spotify developer dashboard](https://developer.spotify.com/dashboard),
-   add the redirect URI from `constants.txt` (`SPOTIFY_REDIRECT_URI`, default
-   `http://127.0.0.1:8080/callback`) to the app's settings. It must match exactly.
-   Spotify allows the `http://127.0.0.1` loopback address but **not** `localhost`,
-   and requires HTTPS for any non-loopback URI.
-2. Ensure the `iOS Shortcuts ENV` item has these fields: `SPOTIFY_CLIENT_ID`,
-   `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_SHAZAM_PLAYLIST_ID`, `SPOTIFY_REFRESH_TOKEN`.
+### Build and pending cutover
 
-### When the token expires
+The source is prepared for `/capture`; it has **not been installed or verified
+on the phone**. Retained `.shortcut` binaries are fallback artifacts, not builds
+of this capture-client source. Keep the installed shortcuts, `spotify_reauth.cherri`,
+Reauth design document, all existing binaries, `SPOTIFY_REDIRECT_URI`, Spotify
+credential fields, and the Spotify developer app until phone E2E passes.
 
-`Shazam → Spotify` detects the expired token (`invalid_grant`), queues the song
-to Receptor so it isn't lost, and tells you to reauthorize. `Spotify Reauth` is a
-**two-tap flow** (driven by the clipboard so nothing blocks the screen while
-you're in Safari):
+For source validation without credentials, substitute placeholders with dummy
+values in a scratch copy and run `cherri <scratch-file.cherri> --skip-sign -d`.
+Inspect the plist for the endpoint, POST JSON body, auth headers, and
+`detect.dictionary` followed by `getvalueforkey` for `message`. Do not import
+that dummy build. The regular compile script injects real secrets and signs
+output, so it is not the dummy-validation path.
 
-1. Run **Spotify Reauth**. It shows a brief note, then opens Spotify in Safari.
-2. Approve access. You'll land on `http://127.0.0.1:8080/callback?code=...` —
-   Safari can't load it (nothing's listening), but the URL is still in the address
-   bar. **Copy that URL** and switch back to Shortcuts.
-3. Run **Spotify Reauth again.** It reads the URL off your clipboard, exchanges it,
-   and copies the new refresh token to your clipboard.
-4. Open `Shazam → Spotify` in the Shortcuts editor and paste it into the
-   `RefreshToken` text field.
+Pending integration, in order:
 
-> The shortcut tells run 1 from run 2 by checking whether the clipboard already
-> contains a `code=...`. If you ever get stuck, copy anything without `code=`
-> (or nothing) and it restarts from run 1.
-
-### Caveats
-
-- **Manual paste.** A running shortcut can't rewrite its own baked-in value, so
-  the new token is pasted by hand. This is the trade for keeping the hot path
-  free of a per-run file read.
-- **Recompile drift.** After an on-phone reauth, the live token on the phone is
-  newer than the `SPOTIFY_REFRESH_TOKEN` 1Password secret. **Recompiling
-  `Shazam → Spotify` from Cherri will overwrite the fresh token with the stale
-  one** — so after any recompile, re-paste the current token (or update the
-  1Password secret first). Recompiles are rare.
-
-### Test matrix (run before 2026-07-20)
-
-1. **Valid token** → silent refresh, song added to playlist.
-2. **Corrupted token** → hand-edit the `RefreshToken` field to garbage; rerun →
-   song queued to Receptor + "run Spotify Reauth" notice.
-3. **Reauth flow** → run `Spotify Reauth` (Safari opens), approve, copy the
-   redirect URL, run it again, confirm a token lands on the clipboard; paste into
-   `Shazam → Spotify`; rerun case 1 succeeds.
+1. Confirm the capture service is ready. Set its endpoint in untracked
+   `constants.local.txt` as `MUSIC_SYNC_CAPTURE_URL=<capture-endpoint>` and
+   ensure the caller's `MODAL_KEY` / `MODAL_SECRET` fields are provisioned.
+2. Preserve the fallback artifacts, then build the source with
+   `just compile shortcuts/shazam_right_pointing_arrow_spotify.cherri`.
+   This uses local constant overrides, injects the ENV item fields, compiles
+   unsigned, applies plist patches, and signs the `.shortcut`. It replaces
+   the output binary at `shortcuts/Shazam → Spotify.shortcut` if present.
+3. Import the signed build on the Mac and transfer/import it on the phone,
+   replacing the installed Shazam shortcut. Reimports prompt for permissions.
+4. On the phone, recognize a song: verify the service's added notification,
+   the song in `new songs`, and the corresponding Shazam provenance record
+   through the service's catalog verification. Repeat the same song and verify
+   the already-present notification without duplication. Report both results.
+5. Only after successful phone E2E, perform the separately approved cutover:
+   retire Spotify Reauth on both devices, its source and design document,
+   fallback binaries, old Spotify credential fields and redirect constant,
+   and the old shortcut's Spotify developer app. Update documentation then.

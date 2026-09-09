@@ -3,7 +3,6 @@
 #define glyph shazam
 #include 'actions/media'
 #include 'actions/web'
-#include 'actions/shortcuts'
 
 @shazamResult = startShazam(false)
 
@@ -14,105 +13,27 @@ if !@shazamResult {
 
 const Song = getShazamDetail(@shazamResult, "Title")
 const Artist = getShazamDetail(@shazamResult, "Artist")
+const AppleMusicID = getShazamDetail(@shazamResult, "Apple Music ID")
+const ShazamURL = getShazamDetail(@shazamResult, "Shazam URL")
 
-@ClientID = "<<secret:SPOTIFY_CLIENT_ID>>"
-@ClientSecret = "<<secret:SPOTIFY_CLIENT_SECRET>>"
-@RefreshToken = "<<secret:SPOTIFY_REFRESH_TOKEN>>"
-@PlaylistID = "<<secret:SPOTIFY_SHAZAM_PLAYLIST_ID>>"
-
-// 1. Get a new Access Token from Spotify using the Refresh Token.
-@tokenResponse = formRequest("https://accounts.spotify.com/api/token", "POST", {
-	"grant_type": "refresh_token",
-	"refresh_token": "{RefreshToken}",
-	"client_id": "{ClientID}",
-	"client_secret": "{ClientSecret}"
-})
-
-@tokenResponseDict = getDictionary(@tokenResponse)
-@AccessToken = getValue(@tokenResponseDict, "access_token")
-
-// If the refresh token has expired, Spotify returns invalid_grant with no access
-// token. Discard it (never retry), queue the song so it isn't lost, and tell the
-// user to reauthorize. Spotify refresh tokens expire every 6 months (2026-07-20).
-if !@AccessToken {
-	@receptorInput = "Spotify token expired - couldn't add {Song} by {Artist} to the Shazam playlist. Run the Spotify Reauth shortcut, paste the new refresh token into Shazam → Spotify, then add this song manually $ low priority task"
-	run("Receptor 📥", @receptorInput)
-	showNotification("Spotify refresh token expired. Run the Spotify Reauth shortcut, then paste the new token into this shortcut's RefreshToken field.", "Shazam → Spotify")
-	stop()
-}
-
-// Prepare song and artist for the URL by encoding spaces.
-@encodedArtist = urlEncode(Artist)
-@encodedSong = urlEncode(Song)
-
-// 2. Search for the track on Spotify to get its ID.
-@searchResult = downloadURL("https://api.spotify.com/v1/search?q=track:{encodedSong}+artist:{encodedArtist}&type=track&limit=1", {
-	"Authorization": "Bearer {AccessToken}"
-})
-
-// Get the track ID from the first search result
-@searchResultDict = getDictionary(@searchResult)
-@tracks = getValue(@searchResultDict, "tracks")
-@tracksDict = getDictionary(@tracks)
-@trackItems = getValue(@tracksDict, "items")
-@firstTrack = getFirstItem(@trackItems)
-@firstTrackDict = getDictionary(@firstTrack)
-@TrackID = getValue(@firstTrackDict, "id")
-
-// If no track ID was found, the song doesn't exist on Spotify.
-if !@TrackID {
-    showNotification("Could not find {Song} by {Artist} on Spotify.", "Shazam → Spotify")
-    @receptorInput = "The Spotify API couldn't recognize {Song} by {Artist} - Add it to the Shazam Spotify playlist manually $ low priority task"
-    run("Receptor 📥", @receptorInput)
-    stop()
-}
-
-// 3. Skip the add if the track is already in the playlist. Pages through the
-// playlist 100 tracks at a time following Spotify's `next` cursor.
-// ponytail: capped at 20 pages (2000 tracks); bump the repeat count if the playlist outgrows it
-@pageURL = "https://api.spotify.com/v1/playlists/{PlaylistID}/tracks?fields=next,items(track(id))&limit=100"
-@morePages = "yes"
-@alreadyInPlaylist = "no"
-repeat page for 20 {
-	if @morePages == "yes" && @alreadyInPlaylist == "no" {
-		@pageResponse = downloadURL("{pageURL}", {
-			"Authorization": "Bearer {AccessToken}"
-		})
-		@pageText = "{pageResponse}"
-		if @pageText contains "{TrackID}" {
-			@alreadyInPlaylist = "yes"
-		}
-		// `next` is a full URL for the next page, or JSON null (reads back empty) on the last one.
-		@pageDict = getDictionary(@pageResponse)
-		@nextPage = getValue(@pageDict, "next")
-		@nextPageText = "{nextPage}"
-		@morePages = "no"
-		if @nextPageText contains "http" {
-			@morePages = "yes"
-			@pageURL = "{nextPage}"
-		}
-	}
-}
-if @alreadyInPlaylist == "yes" {
-	showNotification("{Song} by {Artist} is already in the Spotify playlist.", "Shazam → Spotify")
-	stop()
-}
-
-// 4. Add the track to the playlist.
-// This requires a POST request with a JSON body, so we use jsonRequest().
-@addResponse = jsonRequest("https://api.spotify.com/v1/playlists/{PlaylistID}/tracks", "POST", {
-	"uris": ["spotify:track:{TrackID}"]
+// Send the recognized song to the capture service; display its response message.
+@response = jsonRequest("<<constant:MUSIC_SYNC_CAPTURE_URL>>", "POST", {
+	"title": "{Song}",
+	"artist": "{Artist}",
+	"apple_music_id": "{AppleMusicID}",
+	"shazam_url": "{ShazamURL}"
 }, {
-	"Authorization": "Bearer {AccessToken}",
+	"Modal-Key": "<<secret:MODAL_KEY>>",
+	"Modal-Secret": "<<secret:MODAL_SECRET>>",
 	"Content-Type": "application/json"
 })
 
-// Check the response for an error.
-@addResponseDict = getDictionary(@addResponse)
-@Error = getValue(@addResponseDict, "error")
-if @Error {
-	showNotification("{Song} by {Artist} could not be added to Spotify playlist.", "Shazam → Spotify")
+@responseDict = getDictionary(@response)
+@message = getValue(@responseDict, "message")
+
+if !@message {
+	showNotification("music-sync did not answer - {Song} by {Artist} was not saved.", "Shazam → Spotify")
 	stop()
 }
 
-showNotification("{Song} by {Artist} has been added to Spotify playlist.", "Shazam → Spotify")
+showNotification("{message}", "Shazam → Spotify")
