@@ -74,6 +74,8 @@ def stub(tool):
 
 
 class CompileShortcutTest(unittest.TestCase):
+    shortcut_name = "Build Probe"
+
     def setUp(self):
         self.scratch = tempfile.TemporaryDirectory(prefix="compile-shortcut-test-")
         self.addCleanup(self.scratch.cleanup)
@@ -106,8 +108,8 @@ class CompileShortcutTest(unittest.TestCase):
 const Asset = embedFile("assets/sample.txt")
 formRequest("https://example.com", "POST", { "file": "{Asset}" })
 showNotification(@credential)
-''')
-        self.destination = self.source_dir / "Build Probe.shortcut"
+'''.replace('#define name Build Probe', '#define name ' + self.shortcut_name))
+        self.destination = self.source_dir / (self.shortcut_name + '.shortcut')
         self.destination.write_bytes(b"PREVIOUS_SIGNED_OUTPUT")
 
     def build(self, mode="success", files=None):
@@ -125,7 +127,7 @@ showNotification(@credential)
                 self.assertNotIn(DUMMY.encode(), p.read_bytes(), f"credential left in {p.relative_to(self.root)}")
             self.assertFalse(p.is_fifo(), f"FIFO left in {p.relative_to(self.root)}")
         self.assertEqual(sorted(p.name for p in self.source_dir.iterdir()),
-                         sorted(["assets", "first.cherri", "Build Probe.shortcut"] +
+                         sorted(["assets", "first.cherri", self.destination.name] +
                                 [p.name for p in allowed if p != self.destination and p.parent == self.source_dir]))
 
     def test_sign_failure_preserves_destination_and_removes_credentials(self):
@@ -136,7 +138,7 @@ showNotification(@credential)
 
     def test_success_preserves_constants_assets_patch_and_multiple_files(self):
         second = self.source_dir / "second.cherri"
-        second.write_text(self.source.read_text().replace("Build Probe", "Second Probe"))
+        second.write_text(self.source.read_text().replace("#define name " + self.shortcut_name, "#define name Second Probe"))
         output = self.source_dir / "Second Probe.shortcut"
         result = self.build(files=[str(self.source), str(second)])
         self.assertEqual(result.returncode, 0, result.stderr.decode())
@@ -195,6 +197,10 @@ showNotification(@credential)
             except ProcessLookupError:
                 pass
             proc.communicate()
+
+
+class LeadingDotCompileShortcutTest(CompileShortcutTest):
+    shortcut_name = ".Build Probe"
 
 
 if __name__ == "__main__":

@@ -48,6 +48,7 @@ for file in "$@"; do
             wait "$pid" 2>/dev/null || true
         done
         if [ -n "$temp_dir" ]; then
+            shopt -s dotglob  # Shortcut names can start with a dot.
             rm -f "$temp_dir"/*
             rmdir "$temp_dir"
         fi
