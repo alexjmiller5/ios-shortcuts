@@ -1,0 +1,14 @@
+#define name Receptor 🔨
+#define color violet
+#define glyph brainHead
+
+// Stdin gateway for the Hammerspoon hotkey (Cmd+Shift+S in Chrome pipes the tab URL):
+// `echo url | shortcuts run "Receptor 🔨"`. Same as Receptor 📥, stamped as a hotkey capture.
+action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text', text source: 'source')
+
+if ShortcutInput {
+    @Thought = ShortcutInput
+    recept("{Thought}", "hammerspoon")
+} else {
+    nothing()
+}

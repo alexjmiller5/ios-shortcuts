@@ -3,8 +3,8 @@
 #define glyph brainHead
 
 // Recept via Receptor app
-action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text')
+action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text', text source: 'source')
 
 @Thought = prompt("Enter your thought 💭")
 
-recept("{Thought}")
+recept("{Thought}", "shortcut:Receptor 💭")

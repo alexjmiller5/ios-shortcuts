@@ -1,0 +1,15 @@
+#define name Receptor 🤖
+#define color violet
+#define glyph brainHead
+
+// Stdin gateway for AI agents (the `receptor` skill): `echo text | shortcuts run "Receptor 🤖"`.
+// Same as Receptor 📥 but stamps the capture as agent-sent, so the Synapse execution
+// log can tell an agent's capture from a share-sheet one.
+action 'com.alexmiller.receptor.CaptureThoughtIntent' recept(text thought: 'text', text source: 'source')
+
+if ShortcutInput {
+    @Thought = ShortcutInput
+    recept("{Thought}", "agent")
+} else {
+    nothing()
+}
