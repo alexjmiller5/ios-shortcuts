@@ -77,7 +77,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 
 ## Directory Structure
 
-- `notion/` - Shortcuts that interact with Notion databases and Synapse intaker
+- `notion/` - Shortcuts that interact with Notion databases
 - `shortcuts/` - Standalone utility shortcuts (Shazam→Spotify, Spotify Reauth, etc.) - mirrors the phone's "Shortcuts" folder
 - `shortcuts/assets/` - Binary assets embedded at compile time via `embedFile()` (Water Eject tone, Mario waow)
 - `scripts/` - Build scripts (`compile-shortcut.sh`)
