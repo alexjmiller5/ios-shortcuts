@@ -95,53 +95,56 @@ classes, and in-editor edits (as opposed to reimports) keep existing grants.
 The wrapper architecture helps too: pinned wrappers are rarely reinstalled and
 keep their grants.
 
-## Shazam → Spotify capture client
+## Cochlea capture and Shortcut cutover
 
-`shortcuts/shazam_right_pointing_arrow_spotify.cherri` recognizes a song and
-POSTs `title`, `artist`, `apple_music_id`, and `shazam_url` as JSON to
-`MUSIC_SYNC_CAPTURE_URL`. It sends `Modal-Key` and `Modal-Secret` headers from
-`MODAL_KEY` and `MODAL_SECRET` in the `iOS Shortcuts ENV` item. The caller needs
-only the capture endpoint and these auth headers. Matching, playlist selection,
-and storage are owned by the service.
+Cochlea owns recording, offline signatures, recognition, background delivery and
+capture notifications. In Shortcuts, choose **Cochlea → Capture song**, the
+built-in App Shortcut. On iOS 18+, **Cochlea → Capture song** is also available
+as a native Lock Screen or Control Center control with a waveform icon. This
+path uses the app's Keychain enrollment and needs no credentials in a Shortcut.
 
-The response is explicitly converted to a dictionary before reading `message`,
-which is shown as a notification. Unrecognized audio stops before the request;
-an empty message produces a failure notification. Shortcuts may stop on a
-transport/HTTP error or an invalid dictionary response before that notification.
-Compilation does not verify these runtime behaviors.
+To replace a pinned Shazam → Spotify entry, first run the built-in Capture song
+Shortcut. Then point the desired entry point at Cochlea's action or control.
+Keep the existing Shazam and Spotify Reauth shortcuts recoverable until the
+phone checks below pass. A compiled source file, simulator result or successful
+app release does not establish which Shortcut is installed on a phone.
 
-### Build and pending cutover
+### Phone acceptance before retiring auth
 
-The source is prepared for `/capture`; it has **not been installed or verified
-on the phone**. Retained `.shortcut` binaries are fallback artifacts, not builds
-of this capture-client source. Keep the installed shortcuts, `spotify_reauth.cherri`,
-Reauth design document, all existing binaries, `SPOTIFY_REDIRECT_URI`, Spotify
-credential fields, and the Spotify developer app until phone E2E passes.
+1. Install the approved signed Cochlea build and confirm its version. Open the
+   existing device enrollment link if it is not connected. Allow microphone,
+   notifications and Live Activities when prompted.
+2. Run **Cochlea → Capture song** with music playing. Verify the song and artist
+   in the Live Activity, one song-recognized notification, and the song in the
+   destination Spotify playlist. A successful upload or Spotify addition must
+   not create another success alert.
+3. Repeat the same song. Verify there is no duplicate playlist entry. With the
+   service operator, verify the corresponding capture receipt and provenance.
+4. Run from the chosen Lock Screen control and after swiping the app away.
+   Verify capture, cancellation and visible song/no-match/saved-for-later
+   results. Verify an offline capture survives and resolves on the next online
+   use. Report any system permission prompt that prevents the flow.
+5. Verify a definite Spotify-add failure produces an actionable error without
+   losing the capture. A timeout or generic server error does not prove Spotify
+   failed to add it; the service must distinguish an unconfirmed result from a
+   confirmed failure.
+6. After successful phone acceptance, retire only obsolete direct-Spotify
+   Shortcut dependencies: installed Spotify Reauth shortcuts, unused source and
+   design documents, fallback binaries, unused Spotify credential fields and
+   redirect constant, and the old Shortcut developer app. Inventory remaining
+   consumers first. Preserve deliberate backups, the dedicated Modal proxy
+   credential, Music Sync's OAuth grant and terminal-player credentials.
 
-For source validation without credentials, substitute placeholders with dummy
-values in a scratch copy and run `cherri <scratch-file.cherri> --skip-sign -d`.
-Inspect the plist for the endpoint, POST JSON body, auth headers, and
-`detect.dictionary` followed by `getvalueforkey` for `message`. Do not import
-that dummy build. The regular compile script injects real secrets and signs
-output, so it is not the dummy-validation path.
+### Retained fallback source
 
-Pending integration, in order:
+`shortcuts/shazam_right_pointing_arrow_spotify.cherri` is the older capture
+client. It performs native Shazam and sends title, artist, Apple Music ID and
+Shazam URL to `MUSIC_SYNC_CAPTURE_URL` using `MODAL_KEY` and `MODAL_SECRET`.
+Its response notification policy differs from Cochlea's current policy. Do not
+recompile or install it as the replacement for Cochlea. Retained signed binaries
+may differ from the source and are fallback artifacts.
 
-1. Confirm the capture service is ready. Set its endpoint in untracked
-   `constants.local.txt` as `MUSIC_SYNC_CAPTURE_URL=<capture-endpoint>` and
-   ensure the caller's `MODAL_KEY` / `MODAL_SECRET` fields are provisioned.
-2. Preserve the fallback artifacts, then build the source with
-   `just compile shortcuts/shazam_right_pointing_arrow_spotify.cherri`.
-   This uses local constant overrides, streams the ENV item fields through a
-   FIFO to the compiler, applies plist patches, and signs the `.shortcut`.
-   Successful signing replaces `shortcuts/Shazam → Spotify.shortcut` if present.
-3. Import the signed build on the Mac and transfer/import it on the phone,
-   replacing the installed Shazam shortcut. Reimports prompt for permissions.
-4. On the phone, recognize a song: verify the service's added notification,
-   the song in `new songs`, and the corresponding Shazam provenance record
-   through the service's catalog verification. Repeat the same song and verify
-   the already-present notification without duplication. Report both results.
-5. Only after successful phone E2E, perform the separately approved cutover:
-   retire Spotify Reauth on both devices, its source and design document,
-   fallback binaries, old Spotify credential fields and redirect constant,
-   and the old shortcut's Spotify developer app. Update documentation then.
+To validate fallback source without credentials, substitute placeholders with
+dummy values in a scratch copy and run `cherri <scratch-file.cherri> --skip-sign
+-d`. Inspect the endpoint, POST JSON body, auth headers and explicit dictionary
+conversion before reading `message`. Never import that dummy build.
