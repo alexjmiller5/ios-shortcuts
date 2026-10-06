@@ -48,7 +48,7 @@ Flow:
 1. Shazam → `Song`, `Artist` (locked into variables first).
 2. `formRequest` token refresh (`grant_type=refresh_token`) using the baked-in
    refresh token + client id/secret.
-3. Convert the access token to text and check it (per the CLAUDE.md conditional
+3. Convert the access token to text and check it (per the AGENTS.md conditional
    pattern). **If empty / `invalid_grant`:**
    - Queue the song to Receptor so it is never lost:
      `"Spotify token expired - couldn't add {Song} by {Artist} to the Shazam
