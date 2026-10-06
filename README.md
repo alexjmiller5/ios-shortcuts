@@ -36,7 +36,7 @@ just compile-all                     # Compile all shortcuts in the repo
 Secrets are stored in 1Password and referenced in `.cherri` files using the `<<secret:NAME>>` syntax:
 
 ```cherri
-@ClientID = "<<secret:SPOTIFY_CLIENT_ID>>"
+@ApiKey = "<<secret:SERVICE_API_KEY>>"
 "Authorization": "Bearer <<secret:NOTION_INTEGRATION_SECRET>>"
 ```
 
@@ -103,13 +103,7 @@ built-in App Shortcut. On iOS 18+, **Cochlea → Capture song** is also availabl
 as a native Lock Screen or Control Center control with a waveform icon. This
 path uses the app's Keychain enrollment and needs no credentials in a Shortcut.
 
-To replace a pinned Shazam → Spotify entry, first run the built-in Capture song
-Shortcut. Then point the desired entry point at Cochlea's action or control.
-Keep the existing Shazam and Spotify Reauth shortcuts recoverable until the
-phone checks below pass. A compiled source file, simulator result or successful
-app release does not establish which Shortcut is installed on a phone.
-
-### Phone acceptance before retiring auth
+### Phone acceptance
 
 1. Install the approved signed Cochlea build and confirm its version. Open the
    existing device enrollment link if it is not connected. Allow microphone,
@@ -128,23 +122,3 @@ app release does not establish which Shortcut is installed on a phone.
    losing the capture. A timeout or generic server error does not prove Spotify
    failed to add it; the service must distinguish an unconfirmed result from a
    confirmed failure.
-6. After successful phone acceptance, retire only obsolete direct-Spotify
-   Shortcut dependencies: installed Spotify Reauth shortcuts, unused source and
-   design documents, fallback binaries, unused Spotify credential fields and
-   redirect constant, and the old Shortcut developer app. Inventory remaining
-   consumers first. Preserve deliberate backups, the dedicated Modal proxy
-   credential, Music Sync's OAuth grant and terminal-player credentials.
-
-### Retained fallback source
-
-`shortcuts/shazam_right_pointing_arrow_spotify.cherri` is the older capture
-client. It performs native Shazam and sends title, artist, Apple Music ID and
-Shazam URL to `MUSIC_SYNC_CAPTURE_URL` using `MODAL_KEY` and `MODAL_SECRET`.
-Its response notification policy differs from Cochlea's current policy. Do not
-recompile or install it as the replacement for Cochlea. Retained signed binaries
-may differ from the source and are fallback artifacts.
-
-To validate fallback source without credentials, substitute placeholders with
-dummy values in a scratch copy and run `cherri <scratch-file.cherri> --skip-sign
--d`. Inspect the endpoint, POST JSON body, auth headers and explicit dictionary
-conversion before reading `message`. Never import that dummy build.

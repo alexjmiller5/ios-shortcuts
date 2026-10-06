@@ -45,7 +45,7 @@ Cherri, stub injection/signing, dummy constants and assets, and no vault calls.
 Stored as fields of the single `iOS Shortcuts ENV` item in the vault selected
 by `scripts/compile-shortcut.sh`. Referenced as:
 ```cherri
-@ClientID = "<<secret:SPOTIFY_CLIENT_ID>>"
+@ApiKey = "<<secret:SERVICE_API_KEY>>"
 "Authorization": "Bearer <<secret:NOTION_INTEGRATION_SECRET>>"
 ```
 
@@ -78,7 +78,7 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 ## Directory Structure
 
 - `notion/` - Shortcuts that interact with Notion databases
-- `shortcuts/` - Standalone utility shortcuts (Shazam→Spotify, Spotify Reauth, etc.) - mirrors the phone's "Shortcuts" folder
+- `shortcuts/` - Standalone utility shortcuts - mirrors the phone's "Shortcuts" folder
 - `shortcuts/assets/` - Binary assets embedded at compile time via `embedFile()` (Water Eject tone, Mario waow)
 - `scripts/` - Build scripts (`compile-shortcut.sh`)
 - `constants.txt` - Non-sensitive constants for compilation
@@ -91,25 +91,13 @@ jsonRequest("<<constant:SYNAPSE_INTAKER_BASE_URL>>?key=<<secret:API_KEY>>", "POS
 - Use raw text (single quotes) when string interpolation isn't needed
 - **Read HTTP-response values with `getValue(getDictionary(@resp), "key")` - NOT `@resp['key']`.** `formRequest`/`downloadURL`/`jsonRequest` return a "Contents of URL" value, not a `dictionary`. The `['key']` syntax compiles to an inline *property aggrandizement*, not a real "Get Value" action - and it does NOT coerce the response, so at runtime it silently reads nothing (or returns the whole blob). The combination that works: `@respDict = getDictionary(@resp)` ("Get Dictionary from Input") then `@x = getValue(@respDict, "key")` ("Get Value from Dictionary"). Verify with `cherri <file> -d` and grep the `.plist` for `detect.dictionary` + `getvalueforkey`; `WFPropertyVariableAggrandizement` on a response means the lookup is broken. Nested keys must be walked one level at a time (`getValue` can't resolve a dotted path like `tracks.items`); same coercion applies to a list item before reading from it (`getDictionary(getFirstItem(...))`).
 
-## Cochlea cutover and retained fallback
+## Music capture
 
-The intended music-capture entry point is Cochlea's built-in **Capture song**
-App Shortcut or native iOS 18+ control. Preserve its existing
-`CaptureSongIntent`; no wrapper or independent credential is needed here.
-Cochlea owns capture, queue, enrollment and notification behavior.
-
-`shortcuts/shazam_right_pointing_arrow_spotify.cherri` remains a recoverable
-fallback source. It sends Shazam metadata to the capture service using
-`MUSIC_SYNC_CAPTURE_URL`, `MODAL_KEY` and `MODAL_SECRET`, explicitly converts the
-response to a dictionary and displays its message. It is not the intended
-Cochlea replacement. The README holds phone acceptance and retirement steps.
-
-Retain fallback sources, binaries, Spotify Reauth documentation, redirect
-constant, credentials and developer app until Cochlea passes phone capture,
-playlist deduplication and failure acceptance. Source, signed binaries and
-installed Shortcuts are separate states. Compilation alone never authorizes
-fallback/auth removal. Preserve Music Sync OAuth, terminal-player credentials
-and the dedicated Modal proxy credential during retirement.
+Music capture uses Cochlea's built-in **Capture song** App Shortcut or native
+iOS 18+ control. Preserve its existing `CaptureSongIntent`; no wrapper or
+independent credential is needed here. Cochlea owns capture, queue, enrollment
+and notification behavior. Spotify OAuth belongs to Music Sync, not a compiled
+Shortcut. The README describes phone acceptance.
 
 Validate changed Cherri files without secrets by substituting dummy placeholders
 in a scratch copy, then run `cherri <scratch-file.cherri> --skip-sign -d`. Never
